@@ -39,45 +39,29 @@ plugins: [
     [
       'docusaurus-plugin-papersaurus',
       {
-      
         keepDebugHtmls: false,
-
         sidebarNames: ['someSidebar'],
-
         rootDocIds: [
           { version: 'default', rootDocId: 'start_overview'}
         ],
-
         addDownloadButton: true,
-
         autoBuildPdfs: true,
-
         downloadButtonText: 'Download as PDF',
-
         ignoreDocs: ['licenses'],
-      
         stylesheets: [],
-      
         scripts: [],
-      
         coverPageHeader: `...`,
-        
         coverPageFooter: `...`,
-      
         getPdfCoverPage: (siteConfig, pluginConfig, pageTitle, version) => {
           return `...`;
         },
-      
         getPdfPageHeader: (siteConfig, pluginConfig, pageTitle) => {
           return `...`;
         },
-      
         getPdfPageFooter: (siteConfig, pluginConfig, pageTitle) => {
           return `...`;
         },
-      
         author: 'Author name',
-        
         footerParser: /© Your company\d{4}-\d{2}-\d{2}Page \d* \/ \d*/g,
       },
     ],
@@ -264,3 +248,4 @@ a.pdfLink {
 - Just documentations are generated, no pages or blog posts
 - No support for translations
 - Remaming documents with `slug: ...` is only supported to define the root document.
+- Document generation supported for one sidebar entry.
