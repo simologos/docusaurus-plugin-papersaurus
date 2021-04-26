@@ -5,13 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { PapersaurusPluginOptions,
-         SidebarItem,
-         SidebarItemCategory,
-         SidebarItemDoc,
-         Sidebars,
-         TocInfo, 
-         VersionInfo} from './types';
+import {
+  PapersaurusPluginOptions,
+  SidebarItem,
+  SidebarItemCategory,
+  SidebarItemDoc,
+  Sidebars,
+  TocInfo,
+  VersionInfo
+} from './types';
 
 import puppeteer = require("puppeteer");
 import toc = require("html-toc");
@@ -26,7 +28,7 @@ const GithubSlugger = require('github-slugger');
 
 let slugger = new GithubSlugger();
 
-let versions:string[] = [];
+let versions: string[] = [];
 
 const pluginLogPrefix = '[papersaurus] ';
 
@@ -43,8 +45,8 @@ export async function generatePdfFiles(
   // Check if docusaurus build directory exists
   const docusaurusBuildDir = join(CWD, "build");
   if (!fs.existsSync(docusaurusBuildDir) ||
-      !fs.existsSync(join(docusaurusBuildDir, "index.html")) ||
-      !fs.existsSync(join(docusaurusBuildDir, "404.html")) ) {
+    !fs.existsSync(join(docusaurusBuildDir, "index.html")) ||
+    !fs.existsSync(join(docusaurusBuildDir, "404.html"))) {
     throw new Error(
       `${pluginLogPrefix}Could not find a valid docusaurus build directory at "${docusaurusBuildDir}". ` +
       'Did you run "docusaurus build" before?'
@@ -60,21 +62,22 @@ export async function generatePdfFiles(
   // Read versions.json and prepare version infos
   try {
     versions = require(`${CWD}/versions.json`);
-  } catch (e){
+  } catch (e) {
     console.log(`${pluginLogPrefix}No versions.js file found. Continue without versions.`)
   }
   let versionInfos: VersionInfo[] = [];
   if (versions.length == 0) {
-    versionInfos.push( { version: 'next', urlAddIn: '', sidebarFile: `${CWD}/sidebars.js` });
+    versionInfos.push({ version: 'next', urlAddIn: '', sidebarFile: `${CWD}/sidebars.js` });
   }
   else {
-    versionInfos.push( { version: 'next', urlAddIn: 'next', sidebarFile: `${CWD}/sidebars.js` });
+    versionInfos.push({ version: 'next', urlAddIn: 'next', sidebarFile: `${CWD}/sidebars.js` });
     for (let index = 0; index < versions.length; index++) {
       const version = versions[index];
-      versionInfos.push( {
+      versionInfos.push({
         version: version,
         urlAddIn: index === 0 ? '' : version,
-        sidebarFile: `${CWD}/versioned_sidebars/version-${version}-sidebars.json` }
+        sidebarFile: `${CWD}/versioned_sidebars/version-${version}-sidebars.json`
+      }
       );
     }
   }
@@ -134,7 +137,7 @@ export async function generatePdfFiles(
         versionedSidebarName = `version-${versionInfo.version}/${sidebarName}`;
       }
       const sidebar = sideBars[versionedSidebarName];
-      
+
       if (sidebar) {
 
         // Create a fake category with root of sidebar
@@ -166,13 +169,13 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}generatePdfFiles finished!`);
 }
 
-function pickHtmlArticlesRecursive (sideBarItem: SidebarItem,
-                                    parentTitles: string[],
-                                    version: string,
-                                    rootDocUrl: string,
-                                    rootDocId: string,
-                                    htmlDir: string,
-                                    siteConfig: any) {
+function pickHtmlArticlesRecursive(sideBarItem: SidebarItem,
+  parentTitles: string[],
+  version: string,
+  rootDocUrl: string,
+  rootDocId: string,
+  htmlDir: string,
+  siteConfig: any) {
   switch (sideBarItem.type) {
     case 'category': {
       const sideBarItemCategory = sideBarItem as SidebarItemCategory;
@@ -194,14 +197,14 @@ function pickHtmlArticlesRecursive (sideBarItem: SidebarItem,
   return;
 }
 
-async function createPdfFilesRecursive (sideBarItem: SidebarItem,
-                                        parentTitles: string[],
-                                        documentVersion: string,
-                                        pluginOptions: PapersaurusPluginOptions,
-                                        siteConfig: any,
-                                        buildDir: string,
-                                        browser: puppeteer.Browser,
-                                        siteAddress: string): Promise<SidebarItemDoc[]> {
+async function createPdfFilesRecursive(sideBarItem: SidebarItem,
+  parentTitles: string[],
+  documentVersion: string,
+  pluginOptions: PapersaurusPluginOptions,
+  siteConfig: any,
+  buildDir: string,
+  browser: puppeteer.Browser,
+  siteAddress: string): Promise<SidebarItemDoc[]> {
 
   let articles: SidebarItemDoc[] = [];
   let documentTitle = '';
@@ -213,13 +216,13 @@ async function createPdfFilesRecursive (sideBarItem: SidebarItem,
       newParentTitles.push(sideBarItemCategory.label);
       for (const categorySubItem of sideBarItemCategory.items) {
         const subDocs = await createPdfFilesRecursive(categorySubItem,
-                                                      newParentTitles,
-                                                      documentVersion,
-                                                      pluginOptions,
-                                                      siteConfig,
-                                                      buildDir,
-                                                      browser,
-                                                      siteAddress);
+          newParentTitles,
+          documentVersion,
+          pluginOptions,
+          siteConfig,
+          buildDir,
+          browser,
+          siteAddress);
         articles.push(...subDocs);
       }
       documentTitle = sideBarItemCategory.label;
@@ -271,7 +274,7 @@ function readHtmlForItem(
 
   item.unVersionedId = item.id;
   if (item.unVersionedId.indexOf('/') >= 0) {
-    item.unVersionedId = item.unVersionedId.substr(item.unVersionedId.indexOf('/')+1);
+    item.unVersionedId = item.unVersionedId.substr(item.unVersionedId.indexOf('/') + 1);
   }
 
   let htmlFilePath = htmlDir;
@@ -286,7 +289,7 @@ function readHtmlForItem(
 
   console.log(`${pluginLogPrefix}Reading file ${htmlFilePath}`);
 
-  let htmlFileContent:string = fs.readFileSync(htmlFilePath, {encoding: 'utf8'});
+  let htmlFileContent: string = fs.readFileSync(htmlFilePath, { encoding: 'utf8' });
 
   const origin = (new URL(rootDocUrl)).origin;
   stylePath = getStylesheetPathFromHTML(htmlFileContent, origin);
@@ -302,14 +305,14 @@ function readHtmlForItem(
   if (titleMatch) {
     const h1Tag = titleMatch[0];
     // Save found title in item
-    item.pageTitle = h1Tag.substring(h1Tag.indexOf('>')+1, h1Tag.indexOf('</h1>'));
+    item.pageTitle = h1Tag.substring(h1Tag.indexOf('>') + 1, h1Tag.indexOf('</h1>'));
 
     // Add parent titles in front of existing title in h1 tag
     let newTitle = item.pageTitle;
     if (parentTitles.length > 1) {
       newTitle = parentTitles.slice(1).join(' / ') + ' / ' + item.pageTitle;
     }
-    const newH1Tag = h1Tag.substring(0,h1Tag.indexOf('>')+1) + newTitle + h1Tag.substring(h1Tag.indexOf('</h1>'));
+    const newH1Tag = h1Tag.substring(0, h1Tag.indexOf('>') + 1) + newTitle + h1Tag.substring(h1Tag.indexOf('</h1>'));
     html = html.replace(h1Tag, newH1Tag);
   }
 
@@ -360,7 +363,7 @@ async function createPdfFromArticles(
       bottom: "3cm",
       left: "0"
     }
-  });    
+  });
   await coverPage.close();
 
   const page = await browser.newPage();
@@ -386,7 +389,7 @@ async function createPdfFromArticles(
 
   // Add table of contents
   fullHtml = toc('<div id="toc"></div>' + fullHtml, {
-    anchorTemplate: function(id: string) {
+    anchorTemplate: function (id: string) {
       return `<a class="toc-target" href="${id}" id="${id}"></a>`;
     },
     selectors: 'h1,h2,h3',
@@ -402,22 +405,22 @@ async function createPdfFromArticles(
   htmlToc = htmlToc.replace(/class="nav"/g, 'class="toc-headings"');
   htmlToc = htmlToc.replace(/[\r\n]+/g, '');
 
-  const htmlArticles = fullHtml.substring(fullHtml.indexOf('</div>')+6);
+  const htmlArticles = fullHtml.substring(fullHtml.indexOf('</div>') + 6);
   const tocLinks = htmlToc.match(/<a href="#[^<>]+">[^<>]+<\/a>/g);
-  let tocLinksInfos = tocLinks?.map( (link) => {
+  let tocLinksInfos = tocLinks?.map((link) => {
     const entry: TocInfo = {
       link: link,
-      href: link.substring(link.indexOf('href="')+6, link.indexOf('">')),
-      text: link.substring(link.indexOf('">')+2, link.indexOf('</a>')),
+      href: link.substring(link.indexOf('href="') + 6, link.indexOf('">')),
+      text: link.substring(link.indexOf('">') + 2, link.indexOf('</a>')),
     }
     return entry;
   });
   tocLinksInfos = tocLinksInfos || [];
 
   for (const tocLinkInfo of tocLinksInfos) {
-    htmlToc = htmlToc.replace(tocLinkInfo.link, 
+    htmlToc = htmlToc.replace(tocLinkInfo.link,
       `<a href="${tocLinkInfo.href}"><span>${tocLinkInfo.text}</span><span class="dotLeader"></span><span class="pageNumber">_</span></a>`);
-  } 
+  }
 
   let htmlContent = `
   <!DOCTYPE html>
@@ -434,7 +437,7 @@ async function createPdfFromArticles(
 
   await generateContentPdf(contentRawPdfFile);
 
-  const dataBuffer = fs.readFileSync(contentRawPdfFile); 
+  const dataBuffer = fs.readFileSync(contentRawPdfFile);
   const parsedData = await pdfParse(dataBuffer);
 
   htmlContent = getPageWithFixedToc(pdfFooterRegex, tocLinksInfos, parsedData.text, htmlContent);
@@ -487,11 +490,11 @@ async function createPdfFromArticles(
   }
 }
 
-const mergeMultiplePDF = (pdfFiles: string[], name:string) => {
+const mergeMultiplePDF = (pdfFiles: string[], name: string) => {
   return new Promise((resolve, reject) => {
-    pdfMerge(pdfFiles, name, function(err: any){
+    pdfMerge(pdfFiles, name, function (err: any) {
 
-      if(err){
+      if (err) {
         console.log(err);
         reject(err)
       }
@@ -503,10 +506,10 @@ const mergeMultiplePDF = (pdfFiles: string[], name:string) => {
 
 const escapeHeaderRegex = (header: string) => {
   return header
-  // escape all regex reserved characters
-  .replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&')
-  // replace white-spaces to allow line breaks
-  .replace(/\s/g, '(\\s|\\s\\n)');
+    // escape all regex reserved characters
+    .replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&')
+    // replace white-spaces to allow line breaks
+    .replace(/\s/g, '(\\s|\\s\\n)');
 }
 
 const pdfHeaderRegex = [
@@ -517,32 +520,32 @@ const pdfHeaderRegex = [
 
 const getHtmlWithAbsoluteLinks = (html: string, version: string, siteConfig: any) => {
 
-  if(versions && versions.length > 0 && version === versions[0]) {
+  if (versions && versions.length > 0 && version === versions[0]) {
     version = '';
   }
 
-  if(version){
+  if (version) {
     version = `${version}/`;
   }
 
-  return html.replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/g, function(matched, _p1, p2) {
-    if(p2.indexOf('http') === 0){
+  return html.replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/g, function (matched, _p1, p2) {
+    if (p2.indexOf('http') === 0) {
       // ignore already external links
       return matched;
     }
-    
-    if(p2.indexOf('#') === 0) {
+
+    if (p2.indexOf('#') === 0) {
       // ignore anchor links. because we don't know in which file
       // they are. Plus they will allways work (but can have multiple targets when merging)
       return matched;
     }
 
-    if(p2.indexOf('.') === 0) {
+    if (p2.indexOf('.') === 0) {
       // this is some kind of a manually created link.
       return matched;
     }
-    
-    if(p2.indexOf(siteConfig.baseUrl) === 0){
+
+    if (p2.indexOf(siteConfig.baseUrl) === 0) {
       return matched.replace(p2, `${siteConfig.url}${p2}`);
     }
 
@@ -550,23 +553,47 @@ const getHtmlWithAbsoluteLinks = (html: string, version: string, siteConfig: any
   });
 };
 
+const decodeHtml = (str: string) => {
+  const regex = /&amp;|&lt;|&gt;|&quot;|&apos;/g;
+
+  const htmlString = str.replace(regex, (match: string) => {
+    if (match === '&amp;') {
+      return '&';
+    } else if (match === '&lt;') {
+      return ''
+    } else if (match === '&gt;') {
+      return '>';
+    } else if (match === '&quot;') {
+      return '"';
+    } else if (match === '&apos;') {
+      return '\'';
+    }
+
+    return '';
+  });
+
+  return htmlString;
+}
+
 const getPageWithFixedToc = (footerRegEx: RegExp, tocList: TocInfo[], pdfContent: string, htmlContent: string) => {
 
   const pdfPages = pdfContent.split(footerRegEx);
-  if(!pdfPages.length) {      
+  if (!pdfPages.length) {
     return htmlContent;
   }
 
   let pageIndex = 0;
   tocList.forEach(e => {
-    for( ; pageIndex < pdfPages.length; pageIndex++) {
-      const regex1 = pdfHeaderRegex[0](e.text);
-      const regex2 = pdfHeaderRegex[1](e.text);
-      const regex3 = pdfHeaderRegex[2](e.text);
+
+    const regex1 = pdfHeaderRegex[0](decodeHtml(e.text));
+    const regex2 = pdfHeaderRegex[1](decodeHtml(e.text));
+    const regex3 = pdfHeaderRegex[2](decodeHtml(e.text));
+
+    for (; pageIndex < pdfPages.length; pageIndex++) {
       let page = pdfPages[pageIndex];
-      if(regex1.test(page) || regex2.test(page) || regex3.test(page)) {
+      if (regex1.test(page) || regex2.test(page) || regex3.test(page)) {
         htmlContent = htmlContent.replace(
-          '<span class="pageNumber">_</span>', 
+          '<span class="pageNumber">_</span>',
           `<span class="pageNumber">${pageIndex}</span>`
         );
         break;
