@@ -582,7 +582,7 @@ const getURL = (origin: string, filePath: string) => {
 };
 
 const getStylesheetPathFromHTML = (html: string, origin: string) => {
-  const regExp = /(?:|<link.*){1}href="(.*styles.*?\.css){1}"/g;
+  const regExp = /(?:|<link[^<>]*){1}href="([^<>]*styles[^<>]*?\.css){1}"/g;
   let filePath = "";
   try {
     filePath = getFirstCapturingGroup(regExp, html);
@@ -595,7 +595,7 @@ const getStylesheetPathFromHTML = (html: string, origin: string) => {
 };
 
 const getScriptPathFromHTML = (html: string, origin: string) => {
-  const regExp = /(?:|<script.*){1}src="(.*styles.*?\.js){1}"/g;
+  const regExp = /(?:|<script[^<>]*){1}src="([^<>]*styles[^<>]*?\.js){1}"/g;
   let filePath = "";
   try {
     filePath = getFirstCapturingGroup(regExp, html);
