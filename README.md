@@ -4,7 +4,7 @@ Plugin for Docusaurus v2 to generate PDF files including table of contents and a
 
 The plugin is creating a PDF file for each individual document as well as a PDF file for any section and subsection found in sidebar and also one overall PDF file containing all sections.
 
-Optionally the plugin can add a downoald button to the documantation website which opens a menu with download links for the PDF files of current chapter, current sections and the overall PDF file.
+Optionally the plugin can add a download button to the documentation website which opens a menu with download links for the PDF files of current chapter, current sections and the overall PDF file.
 
 ## Introduction
 
@@ -18,7 +18,7 @@ It uses  [Puppeteer](https://pptr.dev/) to convert html pages to PDF.
 
 1. Puppeteer does not yet support individual headers / footers for the cover page. Therefore this plugin generates a PDF with just uses [easy-pdf-merge](https://www.npmjs.com/package/easy-pdf-merge) See [this SO question](https://stackoverflow.com/questions/55470714/trying-to-hide-first-footer-header-on-pdf-generated-with-puppeteer)
 
-2. Puppeteer does not yet support the generation of TOCs. See [this feature request](https://github.com/puppeteer/puppeteer/issues/1778) and [this Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=840455). Therefore this package generates a PDF, then parses it again to update the page numbers in the TOC. Therefore the pdfFooterParser...
+2. Puppeteer does not yet support the generation of TOCs. See [this feature request](https://github.com/puppeteer/puppeteer/issues/1778) and [this Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=840455). Therefore this package generates a PDF, then parses it again to update the page numbers in the TOC. Therefore the parameter  footerParser...
 
 ## Installation
 
@@ -242,6 +242,7 @@ a.pdfLink {
 }
 ```
 
+Even with property `color: transparent;`, the button text becomes visible during mouseover. So you should set the parameter `downloadButtonText` to a value that doesn't look bad with your icon on mouseover, e.g some underlines or dots.
 
 ## Limitation
 
