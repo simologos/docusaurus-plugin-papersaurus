@@ -40,8 +40,6 @@ export default function (
       return {
         headTags: [`
           <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
 
           <script>
 
@@ -57,55 +55,66 @@ export default function (
                 .replace(specials, '')
                 .replace(whitespace, '-');
             }
-    
-            $(window).on('load', function () {
 
-              var pdfDownloadButton = $('' +
-                  '<a class="pdfLink" href="#" id="pdfLink">${pluginOptions.downloadButtonText}</a>' +
-                  '<form id="pdfPopup" class="modal">' +
-                  '</form>' +
+            const checkAndInsertPdfButton = function() {
+
+              if ( !$("#pdfLink").length ) {
+
+                var pdfDownloadButton = $('' +
+                '<div class="navbar__item dropdown dropdown--hoverable dropdown--right" id="pdfDownloadMenu">' +
+                '  <a class="navbar__item navbar__link pdfLink" id="pdfLink" href="">${pluginOptions.downloadButtonText}</a>' +
+                '  <ul class="dropdown__menu" id="pdfDownloadMenuList"></ul>' +
                 '</div>');
 
-              $(".navbar__items--right").prepend(pdfDownloadButton);
+                $(".navbar__items--right").prepend(pdfDownloadButton);
 
-              $("#pdfLink").click(function(){
+                $("#pdfDownloadMenu").mouseenter(function(){
 
-                var menuLink;
-                var downloadItems = [];
-                $("a").filter(".menu__link").filter(function() {
-                  if ($(this).attr('href') === document.location.pathname) {
-                    menuLink = $(this);
+                  console.log('Menu mouseenter');
+
+                  $('#pdfDownloadMenuList').empty();
+
+                  var activePageSidebarLink;
+                  $("a").filter(".menu__link").filter(function() {
+                    if ($(this).attr('href') === document.location.pathname) {
+                      activePageSidebarLink = $(this);
+                    }
+                  });
+                  if (!activePageSidebarLink) {
+                    $("#pdfDownloadMenuList").append('<li>No PDF downloads on this page</li>');
+                    return;
                   }
-                });
-                if (menuLink) {
+
                   const lastSlashPos = document.location.pathname.lastIndexOf('/');
                   var pdfPath = '';
                   if (lastSlashPos != -1) {
                     pdfPath = document.location.pathname.substring(0,lastSlashPos+1);
                     pdfPath = pdfPath.replace('/docs/', '/pdfs/');
                   }
+
+                  var downloadItems = [];
                   downloadItems.push({
-                    title: 'Download this chapter (' + menuLink.text() +')',
-                    slug: slugFunction(menuLink.text()),
+                    title: 'Download this chapter (' + activePageSidebarLink.text() +')',
+                    slug: slugFunction(activePageSidebarLink.text()),
                     type: 'page'
                   });
-                  var parentMenuItem = menuLink.parent().parent().parent();
+                  var parentMenuItem = activePageSidebarLink.parent().parent().parent();
                   while (parentMenuItem && parentMenuItem.length > 0) {
                     if (parentMenuItem.hasClass("menu__list-item")) {
-                      var menuLinkQuery = parentMenuItem.find(".menu__link");
-                      if (menuLinkQuery.length > 0) {
-                        menuLink = menuLinkQuery.first();
-                        slug = slugFunction(menuLink.text());
+                      var activePageSidebarLinkQuery = parentMenuItem.find(".menu__link");
+                      if (activePageSidebarLinkQuery.length > 0) {
+                        activePageSidebarLink = activePageSidebarLinkQuery.first();
+                        slug = slugFunction(activePageSidebarLink.text());
                         downloadItems.forEach(function(downloadItem) {
                           downloadItem.slug = slug + '-' + downloadItem.slug;
                         });
                         downloadItems.push({
-                          title: 'Download section (' + menuLink.text() +')',
+                          title: 'Download section (' + activePageSidebarLink.text() +')',
                           slug: slug,
                           type: 'section'
                         });
                       }
-                      parentMenuItem = menuLink.parent().parent().parent();
+                      parentMenuItem = activePageSidebarLink.parent().parent().parent();
                     }
                     else {
                       parentMenuItem = null;
@@ -118,23 +127,28 @@ export default function (
                     type: 'page'
                   });
 
-                  $('#pdfPopup').empty();
-
-                  var printPopupContent = '<h3>Download PDF files</h3>';
+                  var printPopupContent = '';
                   downloadItems.forEach(function(downloadItem) {
-                    printPopupContent += '<p>';
-                    printPopupContent += '<a href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
-                    printPopupContent += '</p>';
+                    printPopupContent += '<li>';
+                    printPopupContent += '<a class="dropdown__link" href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
+                    printPopupContent += '</li>';
                   });
+                  if (printPopupContent.length === 0) {
+                    console.log('printPopupContent.length === 0');
+                    printPopupContent = '<li><a class="dropdown__link" href="" download>No PDF downloads on this page.</a></li>';
+                  }
+                  else {
+                    console.log('printPopupContent.length > 0');
+                  }
 
-                  $("#pdfPopup").append(printPopupContent);
-                  $('#pdfPopup').modal();
+                  $("#pdfDownloadMenuList").append(printPopupContent);
+                });
 
-                  console.log(JSON.stringify(downloadItems));
-                }
-
-              });
-
+              }
+            }
+    
+            $(window).on('load', function () {
+              setInterval(checkAndInsertPdfButton, 1000);
             });
 
           </script>
