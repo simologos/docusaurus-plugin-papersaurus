@@ -228,22 +228,6 @@ Use the following command to execute it on command line:
 docusaurus papersaurus:build
 ```
 
-## Replace download button text link with an icon
-
-If you prefer to have an image button instead of a text button to download the PDF files you may add something like the following to the stylesheet of your documentation website:
-
-```
-a.pdfLink {
-  padding: 0.25rem 1rem;
-  background: url('https://yourUrlToTheImageFile/pdfIcon.svg') no-repeat;
-  border:none;
-  background-size: contain;
-  color: transparent;
-}
-```
-
-Even with property `color: transparent;`, the button text becomes visible during mouseover. So you should set the parameter `downloadButtonText` to a value that doesn't look bad with your icon on mouseover, e.g some underlines or dots.
-
 ## Limitation
 
 - Just documentations are generated, no pages or blog posts
