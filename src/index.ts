@@ -57,11 +57,10 @@ export default function (
           }
 
           const getPdfPath = function() {
-            var pdfPath = '';
-            const lastSlashPos = document.location.pathname.lastIndexOf('/');
-            if (lastSlashPos != -1) {
-              pdfPath = document.location.pathname.substring(0,lastSlashPos+1);
-              pdfPath = pdfPath.replace('/docs/', '/pdfs/');
+            var pdfPath = document.location.pathname + '/';
+            var docsPos = pdfPath.lastIndexOf('/docs/');
+            if (docsPos != -1) {
+              pdfPath = pdfPath.substr(0,docsPos) + '/pdfs/';
             }
             return pdfPath;
           }
@@ -69,7 +68,8 @@ export default function (
           const getDownloadItems = function() {
             var activePageSidebarLink;
             $("a").filter(".menu__link").filter(function() {
-              if ($(this).attr('href') === document.location.pathname) {
+              if ($(this).attr('href') === document.location.pathname ||
+                  ($(this).attr('href') + '/') === document.location.pathname) {
                 activePageSidebarLink = $(this);
               }
             });
@@ -144,7 +144,7 @@ export default function (
             var printMenuContent = '';
             downloadItems.forEach(function(downloadItem) {
               printMenuContent += '<li class="menu__list-item">';
-              printMenuContent += '<li class="menu__link" href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
+              printMenuContent += '<a class="menu__link" href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
               printMenuContent += '</li>';
             });
             if (printMenuContent.length === 0) {
