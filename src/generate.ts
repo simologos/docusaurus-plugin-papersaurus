@@ -15,14 +15,14 @@ import {
   VersionInfo
 } from './types';
 
-import puppeteer = require("puppeteer");
-import toc = require("html-toc");
+import puppeteer = require('puppeteer');
+import toc = require('html-toc');
 const pdfMerge = require('easy-pdf-merge');
 const pdfParse = require('pdf-parse');
 const join = require('path').join;
-import express = require("express");
-import { AddressInfo } from "net";
-import * as fs from "fs-extra";
+import express = require('express');
+import { AddressInfo } from 'net';
+import * as fs from 'fs-extra';
 import { loadSidebars } from './sidebars';
 const GithubSlugger = require('github-slugger');
 
@@ -43,10 +43,10 @@ export async function generatePdfFiles(
   const CWD = process.cwd();
 
   // Check if docusaurus build directory exists
-  const docusaurusBuildDir = join(CWD, "build");
+  const docusaurusBuildDir = join(CWD, 'build');
   if (!fs.existsSync(docusaurusBuildDir) ||
-    !fs.existsSync(join(docusaurusBuildDir, "index.html")) ||
-    !fs.existsSync(join(docusaurusBuildDir, "404.html"))) {
+    !fs.existsSync(join(docusaurusBuildDir, 'index.html')) ||
+    !fs.existsSync(join(docusaurusBuildDir, '404.html'))) {
     throw new Error(
       `${pluginLogPrefix}Could not find a valid docusaurus build directory at "${docusaurusBuildDir}". ` +
       'Did you run "docusaurus build" before?'
@@ -353,17 +353,17 @@ async function createPdfFromArticles(
   const coverPage = await browser.newPage();
   await coverPage.setContent(pluginOptions.getPdfCoverPage(siteConfig, pluginOptions, documentTitle, documentVersion));
   await coverPage.pdf({
-    format: "A4",
+    format: 'A4',
     path: titlePdfFile,
     headerTemplate: pluginOptions.coverPageHeader,
     footerTemplate: pluginOptions.coverPageFooter,
     displayHeaderFooter: true,
     printBackground: true,
     margin: {
-      top: "10cm",
-      right: "0",
-      bottom: "3cm",
-      left: "0"
+      top: '10cm',
+      right: '0',
+      bottom: '3cm',
+      left: '0'
     }
   });
   await coverPage.close();
@@ -373,7 +373,7 @@ async function createPdfFromArticles(
   let stylePath = articleList[0].stylePath;
   let scriptPath = articleList[0].scriptPath;
 
-  let fullHtml = "";
+  let fullHtml = '';
   for (const article of articleList) {
     if (articleList.length > 1 && pluginOptions.ignoreDocs.includes(article.unVersionedId || '-IdIsEmpty-')) {
       // Don't add ignored articles to PDF's with multiple articles (section pdf's, complete document pdf)
@@ -475,17 +475,17 @@ async function createPdfFromArticles(
 
     await page.pdf({
       path: targetFile,
-      format: "A4",
+      format: 'A4',
       headerTemplate: pluginOptions.getPdfPageHeader(siteConfig, pluginOptions, documentTitle),
       footerTemplate: pluginOptions.getPdfPageFooter(siteConfig, pluginOptions, documentVersion),
       displayHeaderFooter: true,
       printBackground: true,
       scale: 1,
       margin: {
-        top: "5cm",
-        right: "2cm",
-        bottom: "2.3cm",
-        left: "2cm"
+        top: '5cm',
+        right: '2cm',
+        bottom: '2.3cm',
+        left: '2cm'
       }
     });
 
@@ -607,12 +607,12 @@ const getPageWithFixedToc = (footerRegEx: RegExp, tocList: TocInfo[], pdfContent
 }
 
 const getURL = (origin: string, filePath: string) => {
-  return origin + "/" + filePath.substring(filePath.startsWith("/") ? 1 : 0);
+  return origin + '/' + filePath.substring(filePath.startsWith('/') ? 1 : 0);
 };
 
 const getStylesheetPathFromHTML = (html: string, origin: string) => {
   const regExp = /(?:|<link[^<>]*){1}href="([^<>]*styles[^<>]*?\.css){1}"/g;
-  let filePath = "";
+  let filePath = '';
   try {
     filePath = getFirstCapturingGroup(regExp, html);
   } catch {
@@ -625,7 +625,7 @@ const getStylesheetPathFromHTML = (html: string, origin: string) => {
 
 const getScriptPathFromHTML = (html: string, origin: string) => {
   const regExp = /(?:|<script[^<>]*){1}src="([^<>]*styles[^<>]*?\.js){1}"/g;
-  let filePath = "";
+  let filePath = '';
   try {
     filePath = getFirstCapturingGroup(regExp, html);
   } catch {
@@ -641,12 +641,12 @@ const getFirstCapturingGroup = (regExp: RegExp, text: string) => {
   if (match && match[1]) {
     return match[1];
   } else {
-    throw new ReferenceError("No capture group found in the provided text.");
+    throw new ReferenceError('No capture group found in the provided text.');
   }
 };
 
 function isObject(x: unknown): x is Record<PropertyKey, unknown> {
-  return x !== null && typeof x === "object";
+  return x !== null && typeof x === 'object';
 }
 
 function hasOwnProperty<
@@ -659,13 +659,11 @@ function hasOwnProperty<
 const isAddressInfo = (arg: unknown): arg is AddressInfo => {
   return (
     isObject(arg) &&
-    hasOwnProperty(arg, "address") &&
-    typeof arg.address == "string" &&
-    hasOwnProperty(arg, "family") &&
-    typeof arg.family == "string" &&
-    hasOwnProperty(arg, "port") &&
-    typeof arg.port == "number"
+    hasOwnProperty(arg, 'address') &&
+    typeof arg.address == 'string' &&
+    hasOwnProperty(arg, 'family') &&
+    typeof arg.family == 'string' &&
+    hasOwnProperty(arg, 'port') &&
+    typeof arg.port == 'number'
   );
 };
-
-
