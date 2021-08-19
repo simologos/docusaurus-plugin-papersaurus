@@ -70,7 +70,9 @@ export async function generatePdfFiles(
     versionInfos.push({ version: 'next', urlAddIn: '', sidebarFile: `${CWD}/sidebars.js` });
   }
   else {
-    versionInfos.push({ version: 'next', urlAddIn: 'next', sidebarFile: `${CWD}/sidebars.js` });
+    if (fs.existsSync(join(docusaurusBuildDir, 'next'))) {
+      versionInfos.push({ version: 'next', urlAddIn: 'next', sidebarFile: `${CWD}/sidebars.js` });
+    }
     for (let index = 0; index < versions.length; index++) {
       const version = versions[index];
       versionInfos.push({
