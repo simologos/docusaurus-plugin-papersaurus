@@ -57,12 +57,17 @@ export default function (
           }
 
           const getPdfPath = function() {
-            var pdfPath = document.location.pathname + '/';
-            var docsPos = pdfPath.lastIndexOf('/docs/');
-            if (docsPos != -1) {
-              pdfPath = pdfPath.substr(0,docsPos) + '/pdfs/';
-            }
-            return pdfPath;
+            var pdfPath = document.location.pathname;
+      			if (pdfPath.endsWith('/')) {
+			      	pdfPath = pdfPath.substr(0, pdfPath.length-1);
+			      }
+			      if (!pdfPath.endsWith('/docs')) {
+              var lastSlashPos = pdfPath.lastIndexOf('/');
+				      pdfPath = pdfPath.substr(0, lastSlashPos);
+			      }
+			      pdfPath = pdfPath + '/';
+			      pdfPath = pdfPath.replace('/docs/', '/pdfs/');
+	          return pdfPath;
           }
 
           const getDownloadItems = function() {
