@@ -25,6 +25,7 @@ import { AddressInfo } from 'net';
 import * as fs from 'fs-extra';
 import { loadSidebars } from './sidebars';
 const GithubSlugger = require('github-slugger');
+const he = require('he');
 
 let slugger = new GithubSlugger();
 
@@ -240,7 +241,7 @@ async function createPdfFilesRecursive(sideBarItem: SidebarItem,
       break;
   }
 
-  pdfFilename = documentTitle;
+  pdfFilename = he.decode(documentTitle);
   if (parentTitles.length > 1) {
     pdfFilename = parentTitles.slice(1).join('-') + '-' + pdfFilename;
   }
