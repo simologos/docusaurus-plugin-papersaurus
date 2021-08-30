@@ -1,6 +1,6 @@
 {
   "name": "docusaurus-plugin-papersaurus",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Papersaurus plugin for Docusaurus (create PDF files).",
   "main": "lib/index.js",
   "scripts": {
@@ -16,9 +16,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@docusaurus/core": "2.0.0-alpha.72",
-    "@docusaurus/types": "2.0.0-alpha.72",
-    "@docusaurus/utils": "2.0.0-alpha.72",
+    "@docusaurus/core": "^2.0.0-beta.5",
+    "@docusaurus/types": "^2.0.0-beta.5",
+    "@docusaurus/utils": "^2.0.0-beta.5",
     "easy-pdf-merge": "^0.2.6",
     "express": "^4.17.1",
     "fs-extra": "^9.1.0",
@@ -31,7 +31,7 @@
     "puppeteer": "^5.4.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^2.0.0-alpha.72",
+    "@docusaurus/module-type-aliases": "^2.0.0-beta.5",
     "@tsconfig/docusaurus": "^1.0.2",
     "@types/express": "^4.17.11",
     "@types/fs-extra": "^9.0.6",
@@ -42,6 +42,8 @@
     "@types/puppeteer": "^5.4.3",
     "@types/react": "^17.0.2",
     "@types/react-helmet": "^6.0.0",
+    "@types/react-loadable": "^5.5.6",
+    "@types/react-router-config": "^5.0.3",
     "@types/react-router-dom": "^5.1.7",
     "@types/webpack-merge": "^4.1.5",
     "typescript": "^4.2.4"
