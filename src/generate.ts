@@ -7,13 +7,17 @@
 
 import {
   PapersaurusPluginOptions,
-  SidebarItem,
-  SidebarItemCategory,
-  SidebarItemDoc,
-  Sidebars,
   TocInfo,
   VersionInfo
 } from './types';
+
+import {
+  SidebarItemCategory,
+  SidebarItemDoc,
+  UnprocessedSidebarItem,
+  UnprocessedSidebarItemCategory,
+  UnprocessedSidebars,
+} from './pluginContentDocsTypes';
 
 import puppeteer = require('puppeteer');
 import toc = require('html-toc');
@@ -103,7 +107,8 @@ export async function generatePdfFiles(
   // Loop through all found versions
   for (const versionInfo of versionInfos) {
     console.log(`${pluginLogPrefix}Processing version '${versionInfo.version}'`);
-    const sideBars: Sidebars = loadSidebars(versionInfo.sidebarFile);
+    const sidebarOptions = { sidebarCollapsed: true, sidebarCollapsible: true}
+    const sideBars: UnprocessedSidebars = loadSidebars(versionInfo.sidebarFile, sidebarOptions);
     console.log(`${pluginLogPrefix}Sidebar file '${versionInfo.sidebarFile}' loaded.`);
 
     slugger = new GithubSlugger(); // forget slugs from other versions   
@@ -144,11 +149,12 @@ export async function generatePdfFiles(
       if (sidebar) {
 
         // Create a fake category with root of sidebar
-        const rootCategory: SidebarItemCategory = {
+        const rootCategory: UnprocessedSidebarItemCategory = {
           type: 'category',
           label: siteConfig.projectName,
           items: sidebar,
-          collapsed: true
+          collapsed: true,
+          collapsible: true
         };
 
         // Browse through all documents of this sidebar
@@ -172,7 +178,7 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}generatePdfFiles finished!`);
 }
 
-function pickHtmlArticlesRecursive(sideBarItem: SidebarItem,
+function pickHtmlArticlesRecursive(sideBarItem: UnprocessedSidebarItem,
   parentTitles: string[],
   version: string,
   rootDocUrl: string,
@@ -181,7 +187,7 @@ function pickHtmlArticlesRecursive(sideBarItem: SidebarItem,
   siteConfig: any) {
   switch (sideBarItem.type) {
     case 'category': {
-      const sideBarItemCategory = sideBarItem as SidebarItemCategory;
+      const sideBarItemCategory = sideBarItem as UnprocessedSidebarItemCategory;
       const newParentTitles = [...parentTitles];
       newParentTitles.push(sideBarItemCategory.label);
       for (const categorySubItem of sideBarItemCategory.items) {
@@ -200,7 +206,7 @@ function pickHtmlArticlesRecursive(sideBarItem: SidebarItem,
   return;
 }
 
-async function createPdfFilesRecursive(sideBarItem: SidebarItem,
+async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
   parentTitles: string[],
   documentVersion: string,
   pluginOptions: PapersaurusPluginOptions,
@@ -296,7 +302,12 @@ function readHtmlForItem(
 
   const origin = (new URL(rootDocUrl)).origin;
   stylePath = getStylesheetPathFromHTML(htmlFileContent, origin);
-  scriptPath = getScriptPathFromHTML(htmlFileContent, origin);
+
+  try {
+    scriptPath = getScriptPathFromHTML(htmlFileContent, origin);
+  }
+  catch {
+  }
 
   const articleMatch = htmlFileContent.match(/<article>.*<\/article>/s);
   if (articleMatch) {
@@ -304,7 +315,10 @@ function readHtmlForItem(
   }
 
   // Search for title in h1 tag
-  const titleMatch = html.match(/<h1 class=".*">.*<\/h1>/s);
+  let titleMatch = html.match(/<h1 class=".*">.*<\/h1>/s);
+  if (!titleMatch) {
+    titleMatch = html.match(/<h1>.*<\/h1>/s);
+  }
   if (titleMatch) {
     const h1Tag = titleMatch[0];
     // Save found title in item
@@ -472,7 +486,9 @@ async function createPdfFromArticles(
     else {
       await page.addStyleTag({ url: stylePath });
     }
-    await page.addScriptTag({ url: scriptPath });
+    if (scriptPath) {
+      await page.addScriptTag({ url: scriptPath });
+    }
 
     await page.pdf({
       path: targetFile,
