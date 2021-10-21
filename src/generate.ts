@@ -107,7 +107,7 @@ export async function generatePdfFiles(
   // Loop through all found versions
   for (const versionInfo of versionInfos) {
     console.log(`${pluginLogPrefix}Processing version '${versionInfo.version}'`);
-    const sidebarOptions = { sidebarCollapsed: true, sidebarCollapsible: true}
+    const sidebarOptions = { sidebarCollapsed: true, sidebarCollapsible: true }
     const sideBars: UnprocessedSidebars = loadSidebars(versionInfo.sidebarFile, sidebarOptions);
     console.log(`${pluginLogPrefix}Sidebar file '${versionInfo.sidebarFile}' loaded.`);
 
@@ -368,7 +368,7 @@ async function createPdfFromArticles(
   const coverPage = await browser.newPage();
   await coverPage.setContent(pluginOptions.getPdfCoverPage(siteConfig, pluginOptions, documentTitle, documentVersion));
   await coverPage.pdf({
-    format: 'A4',
+    format: 'a4',
     path: titlePdfFile,
     headerTemplate: pluginOptions.coverPageHeader,
     footerTemplate: pluginOptions.coverPageFooter,
@@ -492,7 +492,7 @@ async function createPdfFromArticles(
 
     await page.pdf({
       path: targetFile,
-      format: 'A4',
+      format: 'a4',
       headerTemplate: pluginOptions.getPdfPageHeader(siteConfig, pluginOptions, documentTitle),
       footerTemplate: pluginOptions.getPdfPageFooter(siteConfig, pluginOptions, documentVersion),
       displayHeaderFooter: true,
@@ -532,9 +532,9 @@ const escapeHeaderRegex = (header: string) => {
 }
 
 const pdfHeaderRegex = [
-  (h1: string) => new RegExp(`^\\d+\\s{2}${escapeHeaderRegex(h1)}$`, 'gm'),
-  (h2: string) => new RegExp(`^\\d+\\.\\d+\\s{2}${escapeHeaderRegex(h2)}$`, 'gm'),
-  (h3: string) => new RegExp(`^\\d+\\.\\d+.\\d+\\s{2}${escapeHeaderRegex(h3)}$`, 'gm')
+  (h1: string) => new RegExp(`^\\d+\\s{2}${escapeHeaderRegex(h1)}(\\s|\\s\\n)?$`, 'gm'),
+  (h2: string) => new RegExp(`^\\d+\\.\\d+\\s{2}${escapeHeaderRegex(h2)}(\\s|\\s\\n)?$`, 'gm'),
+  (h3: string) => new RegExp(`^\\d+\\.\\d+.\\d+\\s{2}${escapeHeaderRegex(h3)}(\\s|\\s\\n)?$`, 'gm')
 ];
 
 const getHtmlWithAbsoluteLinks = (html: string, version: string, siteConfig: any) => {
@@ -573,7 +573,7 @@ const getHtmlWithAbsoluteLinks = (html: string, version: string, siteConfig: any
 };
 
 const decodeHtml = (str: string) => {
-  const regex = /&amp;|&lt;|&gt;|&quot;|&apos;/g;
+  const regex = /&amp;|&lt;|&gt;|&quot;|&apos;|&#x200B;/g;
 
   const htmlString = str.replace(regex, (match: string) => {
     if (match === '&amp;') {
@@ -586,6 +586,8 @@ const decodeHtml = (str: string) => {
       return '"';
     } else if (match === '&apos;') {
       return '\'';
+    } else if (match === '&#x200B;') {
+      return '';
     }
 
     return '';
