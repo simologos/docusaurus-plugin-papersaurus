@@ -58,16 +58,18 @@ export default function (
 
           const getPdfPath = function() {
             var pdfPath = document.location.pathname;
-      			if (pdfPath.endsWith('/')) {
-			      	pdfPath = pdfPath.substr(0, pdfPath.length-1);
-			      }
-			      if (!pdfPath.endsWith('/docs')) {
+            if (pdfPath.endsWith('/')) {
+              pdfPath = pdfPath.substr(0, pdfPath.length-1);
+            }
+            const checkRootDoc = new RegExp("/docs(((\/[0-9]+\.[0-9]+)|\/next)?)$");
+            if (!checkRootDoc.test(pdfPath)) {
+              // ends with document (not with /docs or /docs/x.x or /docs/next), remove document 
               var lastSlashPos = pdfPath.lastIndexOf('/');
-				      pdfPath = pdfPath.substr(0, lastSlashPos);
-			      }
-			      pdfPath = pdfPath + '/';
-			      pdfPath = pdfPath.replace('/docs/', '/pdfs/');
-	          return pdfPath;
+              pdfPath = pdfPath.substr(0, lastSlashPos);
+            }
+            pdfPath = pdfPath + '/';
+            pdfPath = pdfPath.replace('/docs/', '/pdfs/');
+            return pdfPath;
           }
 
           const getDownloadItems = function() {

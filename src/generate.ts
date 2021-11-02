@@ -75,7 +75,7 @@ export async function generatePdfFiles(
     versionInfos.push({ version: 'next', urlAddIn: '', sidebarFile: `${CWD}/sidebars.js` });
   }
   else {
-    if (fs.existsSync(join(docusaurusBuildDir, 'next'))) {
+    if (fs.existsSync(join(docusaurusBuildDir, 'docs', 'next'))) {
       versionInfos.push({ version: 'next', urlAddIn: 'next', sidebarFile: `${CWD}/sidebars.js` });
     }
     for (let index = 0; index < versions.length; index++) {
