@@ -439,6 +439,30 @@ async function createPdfFromArticles(
       `<a href="${tocLinkInfo.href}"><span>${tocLinkInfo.text}</span><span class="dotLeader"></span><span class="pageNumber">_</span></a>`);
   }
 
+  let htmlStyles = '';
+  if (pluginOptions.stylesheets && pluginOptions.stylesheets.length > 0) {
+    for (const stylesheet of pluginOptions.stylesheets) {
+      htmlStyles = `${htmlStyles}<link rel="stylesheet" href="${stylesheet}">`;
+    }
+  }
+  else {
+    if (stylePath) {
+      htmlStyles = `${htmlStyles}<link rel="stylesheet" href="${stylePath}">`;
+    }
+  }
+
+  let htmlScripts = '';
+  if (pluginOptions.scripts && pluginOptions.scripts.length > 0) {
+    for (const script of pluginOptions.scripts) {
+      htmlScripts = `${htmlScripts}<script src="${script}"></script>`;
+    }
+  }
+  else {
+    if (scriptPath) {
+      htmlScripts = `${htmlScripts}<script src="${scriptPath}"></script>`;
+    }
+  }
+
   let htmlContent = `
   <!DOCTYPE html>
   <html lang="en">
@@ -446,6 +470,8 @@ async function createPdfFromArticles(
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="generator" content="Papersaurus">
+      ${htmlStyles}
+      ${htmlScripts}
     </head>
     <body>
       ${htmlToc}${htmlArticles}
@@ -478,18 +504,6 @@ async function createPdfFromArticles(
   async function generateContentPdf(targetFile: string) {
     await page.goto(siteAddress);
     await page.setContent(htmlContent);
-    if (pluginOptions.stylesheets && pluginOptions.stylesheets.length > 0) {
-      for (const stylesheetPath of pluginOptions.stylesheets) {
-        await page.addStyleTag({ url: stylesheetPath });
-      }
-    }
-    else {
-      await page.addStyleTag({ url: stylePath });
-    }
-    if (scriptPath) {
-      await page.addScriptTag({ url: scriptPath });
-    }
-
     await page.pdf({
       path: targetFile,
       format: 'a4',

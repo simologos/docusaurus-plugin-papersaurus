@@ -1,6 +1,6 @@
 {
   "name": "docusaurus-plugin-papersaurus",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Papersaurus plugin for Docusaurus (create PDF files).",
   "main": "lib/index.js",
   "scripts": {
