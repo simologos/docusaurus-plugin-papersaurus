@@ -144,7 +144,11 @@ export async function generatePdfFiles(
       if (versionInfo.version !== 'next') {
         versionedSidebarName = `version-${versionInfo.version}/${sidebarName}`;
       }
-      const sidebar = sideBars[versionedSidebarName];
+      let sidebar = sideBars[versionedSidebarName];
+      if (!sidebar) {
+        // sidebar name in version-x.x-sidebars.json file not always has a version prefix, try again without version 
+        sidebar = sideBars[sidebarName];
+      }
 
       if (sidebar) {
 
