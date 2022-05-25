@@ -20,6 +20,8 @@ It uses  [Puppeteer](https://pptr.dev/) to convert html pages to PDF.
 
 2. Puppeteer does not yet support the generation of TOCs. See [this feature request](https://github.com/puppeteer/puppeteer/issues/1778) and [this Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=840455). Therefore this package generates a PDF, then parses it again to update the page numbers in the TOC. Therefore the parameter  footerParser...
 
+3. This plugin does not support auto generated sidebars! Please create a custom sidebar in the file `sidebars.js`.
+
 ## Installation
 
 ```
