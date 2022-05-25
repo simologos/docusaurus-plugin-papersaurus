@@ -320,8 +320,9 @@ function readHtmlForItem(
     const footerPos = html.indexOf('<footer ');
     if (markDownDivPos > 0 && footerPos > markDownDivPos) {
       html = html.substring(markDownDivPos, footerPos);
+    }
   }
-  }
+  html = html.replace(/loading="lazy"/g, 'loading="eager"');
 
   // Search for title in h1 tag
   let titleMatch = html.match(/<h1 class=".*">.*<\/h1>/s);
