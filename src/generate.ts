@@ -316,6 +316,11 @@ function readHtmlForItem(
   const articleMatch = htmlFileContent.match(/<article>.*<\/article>/s);
   if (articleMatch) {
     html = articleMatch[0];
+    const markDownDivPos = html.indexOf('<div class=\"theme-doc-markdown markdown\">');
+    const footerPos = html.indexOf('<footer ');
+    if (markDownDivPos > 0 && footerPos > markDownDivPos) {
+      html = html.substring(markDownDivPos, footerPos);
+  }
   }
 
   // Search for title in h1 tag
