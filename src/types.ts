@@ -21,8 +21,8 @@ export type PapersaurusPluginOptions = {
     footerParser: string,
     keepDebugHtmls: boolean,
     sidebarNames: string[],
-    folderNames: string[],
-    includeFolderNames: boolean,
+    subfolders: string[],
+    productTitles: string[],
     rootDocIds: RootDocIds,
 }
 
