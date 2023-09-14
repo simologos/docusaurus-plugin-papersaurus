@@ -183,7 +183,7 @@ export async function generatePdfFiles(
         };
 
         // Browse through all documents of this sidebar
-        let htmlDir = join(docusaurusBuildDir, 'docs', versionInfo.urlAddIn, folderName.toLocaleLowerCase());
+        let htmlDir = join(docusaurusBuildDir, 'docs', versionInfo.urlAddIn);
         pickHtmlArticlesRecursive(rootCategory, [], versionInfo.version, rootDocUrl, rootDocId, htmlDir, siteConfig);
 
         // Create all PDF files for this sidebar

@@ -86,7 +86,29 @@ Set this parameter to `true` to keep the files.
 
 The plugin is using your `sidebars.js` file to find the sections and documents. Since the file can contain multiple sidebars, add the name of the sidebar that should be used to generate files.
 
-The parameter type is a string array, but currently only one entry is supported.
+### subfolders
+If you are using multiple sidebars your files are located in different subfolders. Enter the names of the subfolders located in your docs folder. In case your main sidebar is directly in the docs directory enter an empty string and the names of the other folders.
+
+Example for different directories for the sidebars:
+```
+  subfolders: ['mainDoc', 'blog'],
+```
+
+Example if the main sidebar content is located directly in /doc:
+```
+  subfolders: ['', 'blog'],
+```
+### productTitles
+Add the product name for the different sidebars. This title will be included on the cover page as well as in the header.
+
+The following example shows the configuration if you want to display the product title for the second sidebar but not the first:
+
+```
+  sidebarNames: ['someSidebar', 'blog'],
+  productTitles: ['', 'Blog'],
+```
+
+This would display the 'Blog' name on the cover page and the header for all documentation downloaded from the 'blog' sidebar but not from the 'someSidebar'
 
 ### rootDocIds
 
@@ -235,4 +257,3 @@ docusaurus papersaurus:build
 - Just documentations are generated, no pages or blog posts
 - No support for translations
 - Remaming documents with `slug: ...` is only supported to define the root document.
-- Document generation supported for one sidebar entry.
