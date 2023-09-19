@@ -111,32 +111,53 @@ export async function generatePdfFiles(
     const sideBars: UnprocessedSidebars = loadSidebars(versionInfo.sidebarFile, sidebarOptions);
     console.log(`${pluginLogPrefix}Sidebar file '${versionInfo.sidebarFile}' loaded.`);
 
-    slugger = new GithubSlugger(); // forget slugs from other versions   
-
-    // Create build folder for that version
-    const versionBuildDir = join(pdfBuildDir, versionInfo.urlAddIn);
-    fs.ensureDirSync(versionBuildDir);
-
-    // Build URL to root document of that version
-    let rootDocUrl = `${siteAddress}docs/`
-    if (versionInfo.urlAddIn) {
-      rootDocUrl = `${rootDocUrl}${versionInfo.urlAddIn}/`;
-    }
-
-    // Get root document id of that version (the markdown with slug set to '/')
-    let rootDocId = '';
-    for (const entry of pluginOptions.rootDocIds) {
-      if (entry.version === versionInfo.version) {
-        rootDocId = entry.rootDocId;
-        break;
-      }
-      if (entry.version === 'default') {
-        rootDocId = entry.rootDocId;
-      }
-    }
-
     // Loop through all configured sidebar names
-    for (const sidebarName of pluginOptions.sidebarNames) {
+    for (const [i, sidebarName] of pluginOptions.sidebarNames.entries()) {
+
+      slugger = new GithubSlugger();
+      let folderName = '';
+      let productTitle = '';
+
+      if (pluginOptions.productTitles && pluginOptions.productTitles.length >= i) {
+        productTitle = pluginOptions.productTitles[i];
+      }
+
+      if (pluginOptions.subfolders && pluginOptions.subfolders.length >= i) {
+        folderName = pluginOptions.subfolders[i];
+      }
+
+      // Create build folder for that version
+      const versionBuildDir = join(pdfBuildDir, versionInfo.urlAddIn, folderName);
+      fs.ensureDirSync(versionBuildDir);
+
+      // Build URL to root document of that version
+
+      let rootDocUrl = `${siteAddress}docs/`;
+      
+      if (folderName) {
+        rootDocUrl = `${siteAddress}docs/${folderName}/`;
+      }
+      
+      if (versionInfo.urlAddIn) {
+        rootDocUrl = `${rootDocUrl}${versionInfo.urlAddIn}/`;
+      }
+
+      
+      if (versionInfo.urlAddIn && folderName) {
+        rootDocUrl = `${rootDocUrl}${versionInfo.urlAddIn}/${folderName}`;
+      }
+
+      // Get root document id of that version (the markdown with slug set to '/')
+      let rootDocId = '';
+      for (const entry of pluginOptions.rootDocIds) {
+        if (entry.version === versionInfo.version) {
+          rootDocId = entry.rootDocId;
+          break;
+        }
+        if (entry.version === 'default') {
+          rootDocId = entry.rootDocId;
+        }
+      }
 
       console.log(`${pluginLogPrefix}Start processing sidebar named '${sidebarName}' in version '${versionInfo.version}'`);
 
@@ -166,7 +187,7 @@ export async function generatePdfFiles(
         pickHtmlArticlesRecursive(rootCategory, [], versionInfo.version, rootDocUrl, rootDocId, htmlDir, siteConfig);
 
         // Create all PDF files for this sidebar
-        await createPdfFilesRecursive(rootCategory, [], versionInfo.version, pluginOptions, siteConfig, versionBuildDir, browser, siteAddress);
+        await createPdfFilesRecursive(rootCategory, [], versionInfo.version, pluginOptions, siteConfig, versionBuildDir, browser, siteAddress, folderName, productTitle);
       }
       else {
         console.log(`${pluginLogPrefix}Sidebar '${sidebarName}' doesn't exist in version '${versionInfo.version}', continue without it...`);
@@ -217,7 +238,9 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
   siteConfig: any,
   buildDir: string,
   browser: puppeteer.Browser,
-  siteAddress: string): Promise<SidebarItemDoc[]> {
+  siteAddress: string,
+  folderName: string,
+  productTitle: string): Promise<SidebarItemDoc[]> {
 
   let articles: SidebarItemDoc[] = [];
   let documentTitle = '';
@@ -235,7 +258,9 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
           siteConfig,
           buildDir,
           browser,
-          siteAddress);
+          siteAddress,
+          folderName,
+          productTitle);
         articles.push(...subDocs);
       }
       documentTitle = sideBarItemCategory.label;
@@ -259,6 +284,10 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
 
   if (parentTitles.length > 1) {
     documentTitle = parentTitles.slice(1).join(' / ') + ' / ' + documentTitle;
+  }
+
+  if (productTitle) {
+    documentTitle = productTitle + ' / ' + documentTitle;
   }
 
   if (articles.length > 0) {
