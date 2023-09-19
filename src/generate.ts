@@ -143,7 +143,7 @@ export async function generatePdfFiles(
       }
 
       
-      if (versionInfo.urlAddIn && versionInfo.urlAddIn) {
+      if (versionInfo.urlAddIn && folderName) {
         rootDocUrl = `${rootDocUrl}${versionInfo.urlAddIn}/${folderName}`;
       }
 
