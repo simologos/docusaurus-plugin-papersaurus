@@ -183,11 +183,11 @@ export async function generatePdfFiles(
         };
 
         // Browse through all documents of this sidebar
-        let htmlDir = join(docusaurusBuildDir, 'docs', versionInfo.urlAddIn);
+        let htmlDir = join(docusaurusBuildDir, 'docs', versionInfo.urlAddIn, folderName);
         pickHtmlArticlesRecursive(rootCategory, [], versionInfo.version, rootDocUrl, rootDocId, htmlDir, siteConfig);
 
         // Create all PDF files for this sidebar
-        await createPdfFilesRecursive(rootCategory, [], versionInfo.version, pluginOptions, siteConfig, versionBuildDir, browser, siteAddress, folderName, productTitle);
+        await createPdfFilesRecursive(rootCategory, [], versionInfo.version, pluginOptions, siteConfig, versionBuildDir, browser, siteAddress, productTitle);
       }
       else {
         console.log(`${pluginLogPrefix}Sidebar '${sidebarName}' doesn't exist in version '${versionInfo.version}', continue without it...`);
@@ -239,7 +239,6 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
   buildDir: string,
   browser: puppeteer.Browser,
   siteAddress: string,
-  folderName: string,
   productTitle: string): Promise<SidebarItemDoc[]> {
 
   let articles: SidebarItemDoc[] = [];
@@ -259,7 +258,6 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
           buildDir,
           browser,
           siteAddress,
-          folderName,
           productTitle);
         articles.push(...subDocs);
       }
