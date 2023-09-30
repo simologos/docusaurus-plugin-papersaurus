@@ -8,17 +8,9 @@
 import {
   PapersaurusPluginOptions,
   TocInfo,
-  VersionInfo
 } from './types';
-
-import {
-  SidebarItemCategory,
-  SidebarItemDoc,
-  UnprocessedSidebarItem,
-  UnprocessedSidebarItemCategory,
-  UnprocessedSidebars,
-} from './pluginContentDocsTypes';
-
+import {Props, LoadedPlugin} from '@docusaurus/types';
+import { LoadedContent, LoadedVersion, DocMetadata } from "@docusaurus/plugin-content-docs"
 import puppeteer = require('puppeteer');
 import toc = require('html-toc');
 const pdfMerge = require('easy-pdf-merge');
@@ -27,28 +19,35 @@ const join = require('path').join;
 import express = require('express');
 import { AddressInfo } from 'net';
 import * as fs from 'fs-extra';
-import { loadSidebars } from './sidebars';
 const GithubSlugger = require('github-slugger');
 const he = require('he');
+const cheerio = require('cheerio');
 
 let slugger = new GithubSlugger();
-
-let versions: string[] = [];
 
 const pluginLogPrefix = '[papersaurus] ';
 
 export async function generatePdfFiles(
+  outDir: string,
   pluginOptions: PapersaurusPluginOptions,
-  siteConfig: any) {
+  {siteConfig, plugins}: Props) {
 
   console.log(`${pluginLogPrefix}Execute generatePdfFiles...`);
 
-  const baseUrl = siteConfig.baseUrl; // e.g. '/mywebsitebase/'
+  if (!plugins) {
+    throw new Error(`${pluginLogPrefix}No docs plugin found.`);
+  }
 
-  const CWD = process.cwd();
+  const docsPlugins = plugins.filter(
+    (item) => item.name === "docusaurus-plugin-content-docs"
+  );
+  if (docsPlugins.length > 1 || docsPlugins.length == 0) {
+    throw new Error(`${pluginLogPrefix}Too many or too few docs plugins found, only 1 is supported.`);
+  }
+  let docPlugin:LoadedPlugin = docsPlugins[0];
 
   // Check if docusaurus build directory exists
-  const docusaurusBuildDir = join(CWD, 'build');
+  const docusaurusBuildDir = outDir;
   if (!fs.existsSync(docusaurusBuildDir) ||
     !fs.existsSync(join(docusaurusBuildDir, 'index.html')) ||
     !fs.existsSync(join(docusaurusBuildDir, '404.html'))) {
@@ -64,31 +63,6 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}Clean pdf build folder '${pdfBuildDir}'`);
   fs.emptyDirSync(pdfBuildDir);
 
-  // Read versions.json and prepare version infos
-  try {
-    versions = require(`${CWD}/versions.json`);
-  } catch (e) {
-    console.log(`${pluginLogPrefix}No versions.js file found. Continue without versions.`)
-  }
-  let versionInfos: VersionInfo[] = [];
-  if (versions.length == 0) {
-    versionInfos.push({ version: 'next', urlAddIn: '', sidebarFile: `${CWD}/sidebars.js` });
-  }
-  else {
-    if (fs.existsSync(join(docusaurusBuildDir, 'docs', 'next'))) {
-      versionInfos.push({ version: 'next', urlAddIn: 'next', sidebarFile: `${CWD}/sidebars.js` });
-    }
-    for (let index = 0; index < versions.length; index++) {
-      const version = versions[index];
-      versionInfos.push({
-        version: version,
-        urlAddIn: index === 0 ? '' : version,
-        sidebarFile: `${CWD}/versioned_sidebars/version-${version}-sidebars.json`
-      }
-      );
-    }
-  }
-
   // Start local webserver and host files in docusaurus build folder
   const app = express();
   const httpServer = await app.listen();
@@ -97,7 +71,14 @@ export async function generatePdfFiles(
     httpServer.close();
     throw new Error(`${pluginLogPrefix}Something went wrong spinning up the express webserver.`);
   }
-  app.use(baseUrl, express.static(docusaurusBuildDir));
+  app.use(siteConfig.baseUrl, express.static(docusaurusBuildDir));
+  for (const extraUsePath of pluginOptions.useExtraPaths) {
+    let localPath = extraUsePath.localPath;
+    if (localPath == '..') {
+      localPath = join(docusaurusBuildDir, localPath);
+    }
+    app.use(extraUsePath.serverPath, express.static(localPath));
+  }
   const siteAddress = `http://127.0.0.1:${address.port}${siteConfig.baseUrl}`;
   console.log(`${pluginLogPrefix}Server started at ${siteAddress}`);
 
@@ -105,11 +86,8 @@ export async function generatePdfFiles(
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security'] });
 
   // Loop through all found versions
-  for (const versionInfo of versionInfos) {
-    console.log(`${pluginLogPrefix}Processing version '${versionInfo.version}'`);
-    const sidebarOptions = { sidebarCollapsed: true, sidebarCollapsible: true }
-    const sideBars: UnprocessedSidebars = loadSidebars(versionInfo.sidebarFile, sidebarOptions);
-    console.log(`${pluginLogPrefix}Sidebar file '${versionInfo.sidebarFile}' loaded.`);
+  for (const versionInfo of (docPlugin.content as LoadedContent).loadedVersions) {
+    console.log(`${pluginLogPrefix}Processing version '${versionInfo.versionName}'`);
 
     // Loop through all configured sidebar names
     for (const [i, sidebarName] of pluginOptions.sidebarNames.entries()) {
@@ -127,70 +105,46 @@ export async function generatePdfFiles(
       }
 
       // Create build folder for that version
-      const versionBuildDir = join(pdfBuildDir, versionInfo.urlAddIn, folderName);
+      let versionPath = getVersionPath(versionInfo, siteConfig);
+      const versionBuildDir = join(pdfBuildDir, versionPath, folderName);
       fs.ensureDirSync(versionBuildDir);
 
       // Build URL to root document of that version
-
       let rootDocUrl = `${siteAddress}docs/`;
-      
       if (folderName) {
         rootDocUrl = `${siteAddress}docs/${folderName}/`;
       }
       
-      if (versionInfo.urlAddIn) {
-        rootDocUrl = `${rootDocUrl}${versionInfo.urlAddIn}/`;
+      if (versionPath) {
+        rootDocUrl = `${rootDocUrl}${versionPath}/`;
       }
 
-      
-      if (versionInfo.urlAddIn && folderName) {
-        rootDocUrl = `${rootDocUrl}${versionInfo.urlAddIn}/${folderName}`;
+      if (versionPath && folderName) {
+        rootDocUrl = `${rootDocUrl}${versionPath}/${folderName}`;
       }
 
-      // Get root document id of that version (the markdown with slug set to '/')
-      let rootDocId = '';
-      for (const entry of pluginOptions.rootDocIds) {
-        if (entry.version === versionInfo.version) {
-          rootDocId = entry.rootDocId;
-          break;
-        }
-        if (entry.version === 'default') {
-          rootDocId = entry.rootDocId;
-        }
-      }
+      console.log(`${pluginLogPrefix}Start processing sidebar named '${sidebarName}' in version '${versionInfo.versionName}'`);
 
-      console.log(`${pluginLogPrefix}Start processing sidebar named '${sidebarName}' in version '${versionInfo.version}'`);
-
-      let versionedSidebarName = sidebarName;
-      if (versionInfo.version !== 'next') {
-        versionedSidebarName = `version-${versionInfo.version}/${sidebarName}`;
-      }
-      let sidebar = sideBars[versionedSidebarName];
-      if (!sidebar) {
-        // sidebar name in version-x.x-sidebars.json file not always has a version prefix, try again without version 
-        sidebar = sideBars[sidebarName];
-      }
-
+      let sidebar = versionInfo.sidebars[sidebarName];
       if (sidebar) {
-
         // Create a fake category with root of sidebar
-        const rootCategory: UnprocessedSidebarItemCategory = {
+        const rootCategory = {
           type: 'category',
           label: siteConfig.projectName,
+          unversionedId: siteConfig.projectName,
           items: sidebar,
           collapsed: true,
           collapsible: true
         };
 
         // Browse through all documents of this sidebar
-        let htmlDir = join(docusaurusBuildDir, 'docs', versionInfo.urlAddIn, folderName);
-        pickHtmlArticlesRecursive(rootCategory, [], versionInfo.version, rootDocUrl, rootDocId, htmlDir, siteConfig);
+        pickHtmlArticlesRecursive(rootCategory, [], versionInfo, rootDocUrl, docusaurusBuildDir, siteConfig);
 
         // Create all PDF files for this sidebar
-        await createPdfFilesRecursive(rootCategory, [], versionInfo.version, pluginOptions, siteConfig, versionBuildDir, browser, siteAddress, productTitle);
+        await createPdfFilesRecursive(rootCategory, [], [], versionInfo, pluginOptions, siteConfig, versionBuildDir, browser, siteAddress, productTitle);
       }
       else {
-        console.log(`${pluginLogPrefix}Sidebar '${sidebarName}' doesn't exist in version '${versionInfo.version}', continue without it...`);
+        console.log(`${pluginLogPrefix}Sidebar '${sidebarName}' doesn't exist in version '${versionInfo.versionName}', continue without it...`);
       }
 
     }
@@ -203,56 +157,86 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}generatePdfFiles finished!`);
 }
 
-function pickHtmlArticlesRecursive(sideBarItem: UnprocessedSidebarItem,
+function pickHtmlArticlesRecursive(sideBarItem: any,
   parentTitles: string[],
-  version: string,
+  version: LoadedVersion,
   rootDocUrl: string,
-  rootDocId: string,
   htmlDir: string,
   siteConfig: any) {
   switch (sideBarItem.type) {
     case 'category': {
-      const sideBarItemCategory = sideBarItem as UnprocessedSidebarItemCategory;
+      const hasDocLink = sideBarItem.link && sideBarItem.link.type == 'doc';
+      if (hasDocLink) {
+        let path = htmlDir;
+        for (const doc of version.docs) {
+          if (doc.id == sideBarItem.link.id) {
+              sideBarItem.id = doc.id;
+              sideBarItem.unversionedId = doc.frontMatter.id;
+              path = join(path, getPermaLink(doc, siteConfig));
+              break;
+          }
+        }
+        readHtmlForItem(sideBarItem, parentTitles, rootDocUrl, path, version, siteConfig);
+      }
       const newParentTitles = [...parentTitles];
-      newParentTitles.push(sideBarItemCategory.label);
-      for (const categorySubItem of sideBarItemCategory.items) {
-        pickHtmlArticlesRecursive(categorySubItem, newParentTitles, version, rootDocUrl, rootDocId, htmlDir, siteConfig);
+      newParentTitles.push(sideBarItem.label);
+      for (const categorySubItem of sideBarItem.items) {
+        pickHtmlArticlesRecursive(categorySubItem, newParentTitles, version, rootDocUrl, htmlDir, siteConfig);
+        if (!hasDocLink && !sideBarItem.stylePath) {
+            sideBarItem.stylePath = categorySubItem.stylePath;
+            sideBarItem.scriptPath = categorySubItem.scriptPath;
+        }
       }
       break;
     }
     case 'doc': {
-      const sideBarItemDoc = sideBarItem as SidebarItemDoc;
-      readHtmlForItem(sideBarItemDoc, parentTitles, rootDocUrl, rootDocId, htmlDir, version, siteConfig);
+      // Merge properties we need that is specified on the document.
+      let path = htmlDir;
+      for (const doc of version.docs) {
+        if (doc.id == sideBarItem.id) {
+            sideBarItem.label = doc.title;
+            sideBarItem.unversionedId = doc.frontMatter.id;
+            path = join(path, getPermaLink(doc, siteConfig));
+            break;
+        }
+      }
+      readHtmlForItem(sideBarItem, parentTitles, rootDocUrl, path, version, siteConfig);
       break;
     }
     default:
       break;
   }
-  return;
 }
 
-async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
+async function createPdfFilesRecursive(sideBarItem: any,
   parentTitles: string[],
-  documentVersion: string,
+  parentIds: string[],
+  version: LoadedVersion,
   pluginOptions: PapersaurusPluginOptions,
   siteConfig: any,
   buildDir: string,
   browser: puppeteer.Browser,
   siteAddress: string,
-  productTitle: string): Promise<SidebarItemDoc[]> {
+  productTitle: string): Promise<any[]> {
 
-  let articles: SidebarItemDoc[] = [];
-  let documentTitle = '';
+  let articles: any[] = [];
   let pdfFilename = '';
+  let documentTitle = sideBarItem.label || '';
+  let documentId = sideBarItem.unversionedId || '';
   switch (sideBarItem.type) {
     case 'category': {
-      const sideBarItemCategory = sideBarItem as SidebarItemCategory;
+      if (sideBarItem.unversionedId) {
+        articles.push(sideBarItem);
+      }
       const newParentTitles = [...parentTitles];
-      newParentTitles.push(sideBarItemCategory.label);
-      for (const categorySubItem of sideBarItemCategory.items) {
+      newParentTitles.push(sideBarItem.label);
+      const newParentIds = [...parentIds];
+      newParentIds.push(sideBarItem.unversionedId);
+      for (const categorySubItem of sideBarItem.items) {
         const subDocs = await createPdfFilesRecursive(categorySubItem,
           newParentTitles,
-          documentVersion,
+          newParentIds,
+          version,
           pluginOptions,
           siteConfig,
           buildDir,
@@ -261,22 +245,19 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
           productTitle);
         articles.push(...subDocs);
       }
-      documentTitle = sideBarItemCategory.label;
       break;
     }
     case 'doc': {
-      const sideBarItemDoc = sideBarItem as SidebarItemDoc;
-      articles.push(sideBarItemDoc);
-      documentTitle = sideBarItemDoc.pageTitle || '';
+      articles.push(sideBarItem);
       break;
     }
     default:
       break;
   }
 
-  pdfFilename = he.decode(documentTitle);
-  if (parentTitles.length > 1) {
-    pdfFilename = parentTitles.slice(1).join('-') + '-' + pdfFilename;
+  pdfFilename = he.decode(documentId);
+  if (parentIds.length > 1) {
+    pdfFilename = parentIds.slice(1).join('-') + '-' + pdfFilename;
   }
   pdfFilename = slugger.slug(pdfFilename);
 
@@ -290,7 +271,7 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
 
   if (articles.length > 0) {
     await createPdfFromArticles(documentTitle,
-      documentVersion,
+      version.versionName,
       pdfFilename,
       articles,
       pluginOptions,
@@ -304,23 +285,14 @@ async function createPdfFilesRecursive(sideBarItem: UnprocessedSidebarItem,
 }
 
 function readHtmlForItem(
-  item: SidebarItemDoc,
+  item: any,
   parentTitles: string[],
   rootDocUrl: string,
-  rootDocId: string,
   htmlDir: string,
-  version: string,
+  version: LoadedVersion,
   siteConfig: any) {
 
-  item.unVersionedId = item.id;
-  if (item.unVersionedId.indexOf('/') >= 0) {
-    item.unVersionedId = item.unVersionedId.substr(item.unVersionedId.indexOf('/') + 1);
-  }
-
   let htmlFilePath = htmlDir;
-  if (item.unVersionedId !== rootDocId) {
-    htmlFilePath = join(htmlFilePath, item.unVersionedId);
-  }
   htmlFilePath = join(htmlFilePath, 'index.html');
 
   let stylePath = '';
@@ -384,7 +356,7 @@ async function createPdfFromArticles(
   documentTitle: string,
   documentVersion: string,
   pdfName: string,
-  articleList: SidebarItemDoc[],
+  articleList: any[],
   pluginOptions: PapersaurusPluginOptions,
   siteConfig: any,
   buildDir: string,
@@ -411,12 +383,7 @@ async function createPdfFromArticles(
     footerTemplate: pluginOptions.coverPageFooter,
     displayHeaderFooter: true,
     printBackground: true,
-    margin: {
-      top: '10cm',
-      right: '0',
-      bottom: '3cm',
-      left: '0'
-    }
+    margin: pluginOptions.coverMargins
   });
   await coverPage.close();
 
@@ -427,7 +394,7 @@ async function createPdfFromArticles(
 
   let fullHtml = '';
   for (const article of articleList) {
-    if (articleList.length > 1 && pluginOptions.ignoreDocs.includes(article.unVersionedId || '-IdIsEmpty-')) {
+    if (articleList.length > 1 && pluginOptions.ignoreDocs.includes(article.unversionedId || '-IdIsEmpty-')) {
       // Don't add ignored articles to PDF's with multiple articles (section pdf's, complete document pdf)
       continue;
     }
@@ -440,6 +407,15 @@ async function createPdfFromArticles(
 
   // Hide hashlinks (replace visible hash with space)
   fullHtml = fullHtml.replace(/">#<\/a>/g, `"> </a>`);
+
+  const $ = cheerio.load(fullHtml);
+  if (pluginOptions.ignoreCssSelectors) {
+    for (const ignoreSelector of pluginOptions.ignoreCssSelectors) {
+      $(ignoreSelector).remove();
+    }
+  }
+
+  fullHtml = $.html();
 
   // Add table of contents
   fullHtml = toc('<div id="toc"></div>' + fullHtml, {
@@ -477,12 +453,14 @@ async function createPdfFromArticles(
   }
 
   let htmlStyles = '';
-  if (pluginOptions.stylesheets && pluginOptions.stylesheets.length > 0) {
+  const hasCustomStyles = pluginOptions.stylesheets && pluginOptions.stylesheets.length > 0;
+  if (hasCustomStyles) {
     for (const stylesheet of pluginOptions.stylesheets) {
       htmlStyles = `${htmlStyles}<link rel="stylesheet" href="${stylesheet}">`;
     }
   }
-  else {
+
+  if (!hasCustomStyles || pluginOptions.alwaysIncludeSiteStyles) {
     if (stylePath) {
       htmlStyles = `${htmlStyles}<link rel="stylesheet" href="${stylePath}">`;
     }
@@ -549,12 +527,7 @@ async function createPdfFromArticles(
       displayHeaderFooter: true,
       printBackground: true,
       scale: 1,
-      margin: {
-        top: '5cm',
-        right: '2cm',
-        bottom: '2.3cm',
-        left: '2cm'
-      }
+      margin: pluginOptions.margins
     });
 
   }
@@ -585,17 +558,14 @@ const escapeHeaderRegex = (header: string) => {
 const pdfHeaderRegex = [
   (h1: string) => new RegExp(`^\\d+\\s{2}${escapeHeaderRegex(h1)}(\\s|\\s\\n)?$`, 'gm'),
   (h2: string) => new RegExp(`^\\d+\\.\\d+\\s{2}${escapeHeaderRegex(h2)}(\\s|\\s\\n)?$`, 'gm'),
-  (h3: string) => new RegExp(`^\\d+\\.\\d+.\\d+\\s{2}${escapeHeaderRegex(h3)}(\\s|\\s\\n)?$`, 'gm')
+  (h3: string) => new RegExp(`^\\d+\\.\\d+.\\d+\\s{2}${escapeHeaderRegex(h3)}(\\s|\\s\\n)?$`, 'gm'),
+  (unnumbered: string) => new RegExp(`^${escapeHeaderRegex(unnumbered)}$`, 'gm')
 ];
 
-const getHtmlWithAbsoluteLinks = (html: string, version: string, siteConfig: any) => {
-
-  if (versions && versions.length > 0 && version === versions[0]) {
-    version = '';
-  }
-
-  if (version) {
-    version = `${version}/`;
+const getHtmlWithAbsoluteLinks = (html: string, version: LoadedVersion, siteConfig: any) => {
+  let versionPath = '';
+  if (!version.isLast) {
+    versionPath = `${getVersionPath(version, siteConfig)}/`;
   }
 
   return html.replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/g, function (matched, _p1, p2) {
@@ -619,8 +589,18 @@ const getHtmlWithAbsoluteLinks = (html: string, version: string, siteConfig: any
       return matched.replace(p2, `${siteConfig.url}${p2}`);
     }
 
-    return matched.replace(p2, `${siteConfig.url}${siteConfig.baseUrl}docs/${version}${p2}`);
+    return matched.replace(p2, `${siteConfig.url}${siteConfig.baseUrl}docs/${versionPath}${p2}`);
   });
+};
+
+const getVersionPath = (version: LoadedVersion, siteConfig: any) => {
+  let versionPath = version.path;
+  return versionPath.substring(siteConfig.baseUrl.length, versionPath.length);
+};
+
+const getPermaLink = (doc: DocMetadata, siteConfig: any) => {
+  let link = doc.permalink;
+  return link.substring(siteConfig.baseUrl.length, link.length);
 };
 
 const decodeHtml = (str: string) => {
@@ -656,18 +636,20 @@ const getPageWithFixedToc = (footerRegEx: RegExp, tocList: TocInfo[], pdfContent
 
   let pageIndex = 0;
   tocList.forEach(e => {
-
-    const regex1 = pdfHeaderRegex[0](decodeHtml(e.text));
-    const regex2 = pdfHeaderRegex[1](decodeHtml(e.text));
-    const regex3 = pdfHeaderRegex[2](decodeHtml(e.text));
-
     for (; pageIndex < pdfPages.length; pageIndex++) {
       let page = pdfPages[pageIndex];
-      if (regex1.test(page) || regex2.test(page) || regex3.test(page)) {
-        htmlContent = htmlContent.replace(
-          '<span class="pageNumber">_</span>',
-          `<span class="pageNumber">${pageIndex}</span>`
-        );
+      let found = false;
+      for (let i = 0; i < pdfHeaderRegex.length; ++i) {
+        if (pdfHeaderRegex[i](decodeHtml(e.text)).test(page)) {
+          htmlContent = htmlContent.replace(
+            '<span class="pageNumber">_</span>',
+            `<span class="pageNumber">${pageIndex}</span>`
+          );
+          found = true;
+          break;
+        }
+      }
+      if (found) {
         break;
       }
     }

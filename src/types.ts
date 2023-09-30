@@ -11,22 +11,29 @@ export type PapersaurusPluginOptions = {
     downloadButtonText: string,
     ignoreDocs: string[],
     stylesheets: string[],
+    alwaysIncludeSiteStyles: boolean,
     scripts: string[],
     coverPageHeader: string,
     coverPageFooter: string,
     getPdfCoverPage: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string, version: string) => string;
     getPdfPageHeader: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string) => string;
     getPdfPageFooter: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string) => string;
+    margins: Margins,
+    coverMargins: Margins,
     author: string,
     footerParser: string,
     keepDebugHtmls: boolean,
     sidebarNames: string[],
     subfolders: string[],
     productTitles: string[],
-    rootDocIds: RootDocIds,
+    useExtraPaths: UsePath[],
+    ignoreCssSelectors: string[]
 }
 
-export type RootDocIds = {version: string, rootDocId: string}[];
+export type UsePath = {
+  serverPath: string,
+  localPath: string
+};
 
 export type TocInfo = {
   link: string,
@@ -34,8 +41,9 @@ export type TocInfo = {
   text: string
 }
 
-export type VersionInfo = {
-  version: string,
-  urlAddIn: string,
-  sidebarFile: string
+export type Margins = {
+  top: string,
+  right: string,
+  bottom: string,
+  left: string
 }

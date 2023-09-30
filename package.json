@@ -17,9 +17,8 @@
   "license": "MIT",
   "dependencies": {
     "@docusaurus/core": "^2.3.0",
-    "@docusaurus/mdx-loader": "^2.3.0",
     "@docusaurus/types": "^2.3.0",
-    "@docusaurus/utils": "^2.3.0",
+    "@docusaurus/plugin-content-docs": "^2.3.0",
     "combine-promises": "^1.1.0",
     "easy-pdf-merge": "^0.2.6",
     "express": "^4.17.1",
@@ -31,6 +30,7 @@
     "net": "^1.0.2",
     "path": "^0.12.7",
     "pdf-parse": "^1.1.1",
+    "cheerio": "^1.0.0-rc.12",
     "puppeteer": "^10.4.0"
   },
   "devDependencies": {

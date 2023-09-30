@@ -39,8 +39,6 @@ export default function (
 
       return {
         headTags: [`
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
         <script>
 
           const slugFunction = function(unformattedString) {
@@ -56,20 +54,47 @@ export default function (
               .replace(whitespace, '-');
           }
 
+          const getActiveDocumentId = function() {
+            const findDocId = /docs-doc-id-(.*)?$/;
+            var match = $("html").attr("class").match(findDocId);
+            return match[1];
+          };
+
           const getPdfPath = function() {
             var pdfPath = document.location.pathname;
             if (pdfPath.endsWith('/')) {
               pdfPath = pdfPath.substr(0, pdfPath.length-1);
             }
-            const checkRootDoc = new RegExp("/docs(((\/[0-9]+\.[0-9]+)|\/next)?)$");
-            if (!checkRootDoc.test(pdfPath)) {
-              // ends with document (not with /docs or /docs/x.x or /docs/next), remove document 
-              var lastSlashPos = pdfPath.lastIndexOf('/');
-              pdfPath = pdfPath.substr(0, lastSlashPos);
+            var id = getActiveDocumentId();
+
+            while (!pdfPath.endsWith(id) && id != "" && id.includes("/")) {
+              // If this is a category link we try removing the ids one by one.
+              var lastSlashPos = id.lastIndexOf('/');
+              id = id.substr(lastSlashPos+1, id.length);
+            }
+            if (pdfPath.endsWith(id)) {
+              pdfPath = pdfPath.substr(0, pdfPath.length-id.length-1);
             }
             pdfPath = pdfPath + '/';
-            pdfPath = pdfPath.replace('/docs/', '/pdfs/');
+            if (pdfPath.includes('/docs/')) {
+              pdfPath = pdfPath.replace('/docs/', '/pdfs/');
+            }
+            else {
+              var baseUrl = '${siteConfig.baseUrl}';
+              pdfPath = baseUrl + 'pdfs/' + pdfPath.substr(baseUrl.length, pdfPath.length);
+            }
             return pdfPath;
+          }
+
+          const getHrefId = function(href) {
+            if (href.endsWith('/')) {
+              href = href.substr(0, href.length-1);
+            }
+            var lastSlashPos = href.lastIndexOf('/');
+            if (lastSlashPos > -1) {
+              return href.substr(lastSlashPos, href.length);
+            }
+            return href;
           }
 
           const getDownloadItems = function() {
@@ -87,7 +112,7 @@ export default function (
             var downloadItems = [];
             downloadItems.push({
               title: 'Download this chapter (' + activePageSidebarLink.text() +')',
-              slug: slugFunction(activePageSidebarLink.text()),
+              slug: slugFunction(getHrefId(getActiveDocumentId())),
               type: 'page'
             });
 
@@ -97,7 +122,7 @@ export default function (
                 var activePageSidebarLinkQuery = parentMenuItem.find(".menu__link");
                 if (activePageSidebarLinkQuery.length > 0) {
                   activePageSidebarLink = activePageSidebarLinkQuery.first();
-                  slug = slugFunction(activePageSidebarLink.text());
+                  slug = slugFunction(getHrefId(activePageSidebarLink.attr('href'))),
                   downloadItems.forEach(function(downloadItem) {
                     downloadItem.slug = slug + '-' + downloadItem.slug;
                   });
@@ -193,27 +218,9 @@ export default function (
       };
     },
 
-    extendCli(cli) {
-
-      cli
-        .command('papersaurus:build')
-        .description('Generate pdf files for website')
-        .action(() => {
-
-          const CWD = process.cwd();
-          const siteConfig = loadConfig(`${CWD}/docusaurus.config.js`);
-
-          (async () => {
-            generatePdfFiles(pluginOptions, siteConfig);
-          })();  
-
-        });
-
-    },
-
     async postBuild(props) {
-      if (pluginOptions.autoBuildPdfs) {
-        await generatePdfFiles(pluginOptions, props.siteConfig);
+      if (pluginOptions.autoBuildPdfs || process.env.BUILD_PDF) {
+        await generatePdfFiles(_context.outDir, pluginOptions, props);
       }
     },
 
