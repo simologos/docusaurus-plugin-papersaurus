@@ -87,7 +87,7 @@ export async function generatePdfFiles(
 
   // Loop through all found versions
   for (const versionInfo of (docPlugin.content as LoadedContent).loadedVersions) {
-    console.log(`${pluginLogPrefix}Processing version '${versionInfo.versionName}'`);
+    console.log(`${pluginLogPrefix}Processing version '${versionInfo.label}'`);
 
     // Loop through all configured sidebar names
     for (const [i, sidebarName] of pluginOptions.sidebarNames.entries()) {
@@ -123,7 +123,7 @@ export async function generatePdfFiles(
         rootDocUrl = `${rootDocUrl}${versionPath}/${folderName}`;
       }
 
-      console.log(`${pluginLogPrefix}Start processing sidebar named '${sidebarName}' in version '${versionInfo.versionName}'`);
+      console.log(`${pluginLogPrefix}Start processing sidebar named '${sidebarName}' in version '${versionInfo.label}'`);
 
       let sidebar = versionInfo.sidebars[sidebarName];
       if (sidebar) {
@@ -144,7 +144,7 @@ export async function generatePdfFiles(
         await createPdfFilesRecursive(rootCategory, [], [], versionInfo, pluginOptions, siteConfig, versionBuildDir, browser, siteAddress, productTitle);
       }
       else {
-        console.log(`${pluginLogPrefix}Sidebar '${sidebarName}' doesn't exist in version '${versionInfo.versionName}', continue without it...`);
+        console.log(`${pluginLogPrefix}Sidebar '${sidebarName}' doesn't exist in version '${versionInfo.label}', continue without it...`);
       }
 
     }
@@ -271,7 +271,7 @@ async function createPdfFilesRecursive(sideBarItem: any,
 
   if (articles.length > 0) {
     await createPdfFromArticles(documentTitle,
-      version.versionName,
+      version.label,
       pdfFilename,
       articles,
       pluginOptions,
@@ -522,8 +522,8 @@ async function createPdfFromArticles(
     await page.pdf({
       path: targetFile,
       format: 'a4',
-      headerTemplate: pluginOptions.getPdfPageHeader(siteConfig, pluginOptions, documentTitle),
-      footerTemplate: pluginOptions.getPdfPageFooter(siteConfig, pluginOptions, documentVersion),
+      headerTemplate: pluginOptions.getPdfPageHeader(siteConfig, pluginOptions, documentTitle, documentVersion),
+      footerTemplate: pluginOptions.getPdfPageFooter(siteConfig, pluginOptions, documentTitle, documentVersion),
       displayHeaderFooter: true,
       printBackground: true,
       scale: 1,
