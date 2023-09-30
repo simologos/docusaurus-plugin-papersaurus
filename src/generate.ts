@@ -131,7 +131,7 @@ export async function generatePdfFiles(
         const rootCategory = {
           type: 'category',
           label: siteConfig.projectName,
-          unversionedId: siteConfig.projectName,
+          rootId: siteConfig.projectName,
           items: sidebar,
           collapsed: true,
           collapsible: true
@@ -222,7 +222,7 @@ async function createPdfFilesRecursive(sideBarItem: any,
   let articles: any[] = [];
   let pdfFilename = '';
   let documentTitle = sideBarItem.label || '';
-  let documentId = sideBarItem.unversionedId || '';
+  let documentId = sideBarItem.unversionedId || sideBarItem.rootId || '';
   switch (sideBarItem.type) {
     case 'category': {
       if (sideBarItem.unversionedId) {
@@ -398,7 +398,7 @@ async function createPdfFromArticles(
       // Don't add ignored articles to PDF's with multiple articles (section pdf's, complete document pdf)
       continue;
     }
-    fullHtml += article.articleHtml;
+    fullHtml += article.articleHtml || '';
   }
 
   // Remove header tags (around h1)
