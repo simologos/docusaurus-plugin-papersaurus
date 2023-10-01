@@ -89,6 +89,14 @@ export async function generatePdfFiles(
   for (const versionInfo of (docPlugin.content as LoadedContent).loadedVersions) {
     console.log(`${pluginLogPrefix}Processing version '${versionInfo.label}'`);
 
+    if (pluginOptions.sidebarNames.length == 0) {
+      // No sidebar specified, use all of them.
+      let allSidebarNames:string[] = [];
+      for (const name in versionInfo.sidebars) {
+        allSidebarNames.push(name);
+      }
+      pluginOptions.sidebarNames = allSidebarNames;
+    }
     // Loop through all configured sidebar names
     for (const [i, sidebarName] of pluginOptions.sidebarNames.entries()) {
 
