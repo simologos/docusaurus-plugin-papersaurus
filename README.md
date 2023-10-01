@@ -301,6 +301,29 @@ This plugin requires jQuery to insert a download button if `addDownloadButton` i
 
 Default: `https://code.jquery.com/jquery-3.6.0.min.js`
 
+### getPdfFileName
+
+Override this function to customize the file name of the generated pdfs. By default the names are based on the page ids.
+
+Example:
+```
+getPdfFileName: (siteConfig, pluginConfig, pageTitle, pageId, parentTitles, parentIds, version, versionPath) => {
+  let verString = version;
+  if (verString == "current" || verString == "next") {
+    verString = versionPath;
+  }
+  verString = verString.replace(".", "_");
+  if (parentIds.length == 0) {
+    return "mydoc-" + verString;
+  }
+  let pdfFilename = he.decode(pageId);
+  if (parentIds.length > 1) {
+    pdfFilename = parentIds.slice(1).filter(id => id != "").join('-') + '-' + pdfFilename;
+  }
+  return "mydoc-" + verString + pdfFilename;
+}
+```
+
 ## Limitation
 
 - Just documentations are generated, no pages or blog posts

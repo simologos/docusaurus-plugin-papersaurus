@@ -20,7 +20,6 @@ import express = require('express');
 import { AddressInfo } from 'net';
 import * as fs from 'fs-extra';
 const GithubSlugger = require('github-slugger');
-const he = require('he');
 const cheerio = require('cheerio');
 
 let slugger = new GithubSlugger();
@@ -147,7 +146,7 @@ export async function generatePdfFiles(
         const rootCategory:any = {
           type: 'category',
           label: siteConfig.projectName,
-          rootId: siteConfig.projectName,
+          unversionedId: siteConfig.projectName,
           items: sidebar,
           collapsed: true,
           collapsible: true
@@ -258,9 +257,6 @@ async function createPdfFilesRecursive(sideBarItem: any,
   productTitle: string): Promise<any[]> {
 
   let articles: any[] = [];
-  let pdfFilename = '';
-  let documentTitle = sideBarItem.label || '';
-  let documentId = sideBarItem.unversionedId || sideBarItem.rootId || '';
   switch (sideBarItem.type) {
     case 'category': {
       if (sideBarItem.permalink) {
@@ -294,11 +290,10 @@ async function createPdfFilesRecursive(sideBarItem: any,
       break;
   }
 
-  pdfFilename = he.decode(documentId);
-  if (parentIds.length > 1) {
-    pdfFilename = parentIds.slice(1).filter(id => id != "").join('-') + '-' + pdfFilename;
-  }
+  let pdfFilename = pluginOptions.getPdfFileName(siteConfig, pluginOptions, sideBarItem.label, sideBarItem.unversionedId, parentTitles, parentIds, version.versionName, version.path);
   pdfFilename = slugger.slug(pdfFilename);
+
+  let documentTitle = sideBarItem.label || '';
 
   if (parentTitles.length > 1) {
     documentTitle = parentTitles.slice(1).join(' / ') + ' / ' + documentTitle;

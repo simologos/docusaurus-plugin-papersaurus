@@ -30,6 +30,7 @@ export interface PluginOptions {
   useExtraPaths?: UsePath[];
   ignoreCssSelectors?: string[];
   jQueryUrl?: string;
+  getPdfFileName?: FileNameFunction;
 }
 
 export type PapersaurusPluginOptions = {
@@ -57,6 +58,7 @@ export type PapersaurusPluginOptions = {
   useExtraPaths: UsePath[],
   ignoreCssSelectors: string[],
   jQueryUrl: string,
+  getPdfFileName: FileNameFunction,
 }
 
 export type PageFunction = (
@@ -64,6 +66,17 @@ export type PageFunction = (
   pluginConfig: PapersaurusPluginOptions,
   pageTitle: string,
   version: string
+) => string;
+
+export type FileNameFunction = (
+  siteConfig: any,
+  pluginConfig: PapersaurusPluginOptions,
+  pageTitle: string,
+  pageId: string,
+  parentTitles: string[],
+  parentIds: string[],
+  version: string,
+  versionPath: string
 ) => string;
 
 export type UsePath = {

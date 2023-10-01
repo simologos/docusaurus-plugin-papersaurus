@@ -1,5 +1,6 @@
 import { Joi } from "@docusaurus/utils-validation";
-import { PluginOptions, PapersaurusPluginOptions, PageFunction, Margins, UsePath } from "./types";
+import { PluginOptions, PapersaurusPluginOptions, PageFunction, FileNameFunction, Margins, UsePath } from "./types";
+const he = require('he');
 
 const isStringOrArrayOfStrings = Joi.alternatives().try(
   Joi.string(),
@@ -51,6 +52,22 @@ const defaultPageFooterFunction: PageFunction = (_siteConfig, pluginConfig, _pag
   `;
 };
 
+const defaultPdfFileNameFunction: FileNameFunction = (
+  _siteConfig: any,
+  _pluginConfig: PapersaurusPluginOptions,
+  _pageTitle: string,
+  pageId: string,
+  _parentTitles: string[],
+  parentIds: string[],
+  _version: string,
+  _versionPath: string) => {
+  let pdfFilename = he.decode(pageId);
+  if (parentIds.length > 1) {
+    pdfFilename = parentIds.slice(1).filter(id => id != "").join('-') + '-' + pdfFilename;
+  }
+  return pdfFilename;
+};
+
 const marginsSchema = Joi.object<Margins>({
   top: Joi.string().required(),
   right: Joi.string().required(),
@@ -96,6 +113,7 @@ const schema = Joi.object<PapersaurusPluginOptions>({
   })).default([]),
   ignoreCssSelectors: isStringOrArrayOfStrings.default([]),
   jQueryUrl: Joi.string().allow('').default("https://code.jquery.com/jquery-3.6.0.min.js"),
+  getPdfFileName: Joi.func().default(() => defaultPdfFileNameFunction),
 });
 
 type ValidateFn = (
