@@ -43,61 +43,21 @@ export default function (
       return {
         headTags: [`
         <script>
-
-          const slugFunction = function(unformattedString) {
-            var whitespace = /\\s/g;
-            var specials = /[\\u2000-\\u206F\\u2E00-\\u2E7F\\\'!"#$%&()*+,./:;<=>?@[\\]^\`{|}~’]/g;
-            if (typeof unformattedString !== 'string') {
-              return ''
+          var pdfData = {};
+          const getPdfDataForHref = function(href) {
+            if (href in pdfData) {
+              return pdfData[href];
             }
-            unformattedString = unformattedString.toLowerCase();
-          
-            return unformattedString.trim()
-              .replace(specials, '')
-              .replace(whitespace, '-');
-          }
-
-          const getActiveDocumentId = function() {
-            const findDocId = /docs-doc-id-(.*)?$/;
-            var match = $("html").attr("class").match(findDocId);
-            return match[1];
-          };
-
-          const getPdfPath = function() {
-            var pdfPath = document.location.pathname;
-            if (pdfPath.endsWith('/')) {
-              pdfPath = pdfPath.substr(0, pdfPath.length-1);
-            }
-            var id = getActiveDocumentId();
-
-            while (!pdfPath.endsWith(id) && id != "" && id.includes("/")) {
-              // If this is a category link we try removing the ids one by one.
-              var lastSlashPos = id.lastIndexOf('/');
-              id = id.substr(lastSlashPos+1, id.length);
-            }
-            if (pdfPath.endsWith(id)) {
-              pdfPath = pdfPath.substr(0, pdfPath.length-id.length-1);
-            }
-            pdfPath = pdfPath + '/';
-            if (pdfPath.includes('/docs/')) {
-              pdfPath = pdfPath.replace('/docs/', '/pdfs/');
-            }
-            else {
-              var baseUrl = '${siteConfig.baseUrl}';
-              pdfPath = baseUrl + 'pdfs/' + pdfPath.substr(baseUrl.length, pdfPath.length);
-            }
-            return pdfPath;
-          }
-
-          const getHrefId = function(href) {
             if (href.endsWith('/')) {
               href = href.substr(0, href.length-1);
             }
-            var lastSlashPos = href.lastIndexOf('/');
-            if (lastSlashPos > -1) {
-              return href.substr(lastSlashPos, href.length);
+            else {
+              href = href + '/';
             }
-            return href;
+            if (href in pdfData) {
+              return pdfData[href];
+            }
+            return "";
           }
 
           const getDownloadItems = function() {
@@ -113,29 +73,27 @@ export default function (
             }
 
             var downloadItems = [];
+            var activePdfData = getPdfDataForHref(activePageSidebarLink.attr('href'));
             downloadItems.push({
               title: 'Download this chapter (' + activePageSidebarLink.text() +')',
-              slug: slugFunction(getHrefId(getActiveDocumentId())),
+              path: "${siteConfig.baseUrl}" + activePdfData.file,
               type: 'page'
             });
 
             var parentMenuItem = activePageSidebarLink.parent().parent().parent();
             while (parentMenuItem && parentMenuItem.length > 0) {
               if (parentMenuItem.hasClass("menu__list-item")) {
-                var activePageSidebarLinkQuery = parentMenuItem.find(".menu__link");
-                if (activePageSidebarLinkQuery.length > 0) {
-                  activePageSidebarLink = activePageSidebarLinkQuery.first();
-                  slug = slugFunction(getHrefId(activePageSidebarLink.attr('href'))),
-                  downloadItems.forEach(function(downloadItem) {
-                    downloadItem.slug = slug + '-' + downloadItem.slug;
-                  });
+                var parentSidebarLinkQuery = parentMenuItem.find(".menu__link");
+                if (parentSidebarLinkQuery.length > 0) {
+                  var parentSidebarLink = parentSidebarLinkQuery.first();
+                  var parentPdfData = getPdfDataForHref(parentSidebarLink.attr('href'));
                   downloadItems.push({
-                    title: 'Download section (' + activePageSidebarLink.text() +')',
-                    slug: slug,
+                    title: 'Download section (' + parentSidebarLink.text() +')',
+                    path: "${siteConfig.baseUrl}" + parentPdfData.file,
                     type: 'section'
                   });
                 }
-                parentMenuItem = activePageSidebarLink.parent().parent().parent();
+                parentMenuItem = parentSidebarLink.parent().parent().parent();
               }
               else {
                 parentMenuItem = null;
@@ -144,7 +102,7 @@ export default function (
 
             downloadItems.push({
               title: 'Download complete documentation',
-              slug: slugFunction('${siteConfig.projectName}'),
+              path: "${siteConfig.baseUrl}" + activePdfData.root,
               type: 'page'
             });
 
@@ -155,12 +113,11 @@ export default function (
             $('#pdfDownloadMenuList').empty();
 
             const downloadItems = getDownloadItems();
-            const pdfPath = getPdfPath();
 
             var printPopupContent = '';
             downloadItems.forEach(function(downloadItem) {
               printPopupContent += '<li>';
-              printPopupContent += '<a class="dropdown__link" href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
+              printPopupContent += '<a class="dropdown__link" href="' + downloadItem.path + '" download>' + downloadItem.title + '</a>';
               printPopupContent += '</li>';
             });
             if (printPopupContent.length === 0) {
@@ -174,12 +131,11 @@ export default function (
             $('#pdfLinkSidebarMenu').empty();
 
             const downloadItems = getDownloadItems();
-            const pdfPath = getPdfPath();
 
             var printMenuContent = '';
             downloadItems.forEach(function(downloadItem) {
               printMenuContent += '<li class="menu__list-item">';
-              printMenuContent += '<a class="menu__link" href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
+              printMenuContent += '<a class="menu__link" href="' + downloadItem.path + '" download>' + downloadItem.title + '</a>';
               printMenuContent += '</li>';
             });
             if (printMenuContent.length === 0) {
@@ -188,31 +144,31 @@ export default function (
             $('#pdfLinkSidebarMenu').append(printMenuContent);
           }
 
-          const checkAndInsertPdfButtons = function() {
+          const insertPdfButtons = function() {
+            var pdfDownloadButton = $('' +
+            '<div class="navbar__item dropdown dropdown--hoverable dropdown--right" id="pdfDownloadMenu">' +
+            '  <a class="navbar__item navbar__link pdfLink" id="pdfLink" href="#">${pluginOptions.downloadButtonText}</a>' +
+            '  <ul class="dropdown__menu" id="pdfDownloadMenuList"></ul>' +
+            '</div>');
+            $(".navbar__items--right").prepend(pdfDownloadButton);
 
-            if ( !$("#pdfLink").length ) {
-              var pdfDownloadButton = $('' +
-              '<div class="navbar__item dropdown dropdown--hoverable dropdown--right" id="pdfDownloadMenu">' +
-              '  <a class="navbar__item navbar__link pdfLink" id="pdfLink" href="#">${pluginOptions.downloadButtonText}</a>' +
-              '  <ul class="dropdown__menu" id="pdfDownloadMenuList"></ul>' +
-              '</div>');
-              $(".navbar__items--right").prepend(pdfDownloadButton);
+            $("#pdfDownloadMenu").mouseenter(fillDownloadDropdownMenu);
 
-              $("#pdfDownloadMenu").mouseenter(fillDownloadDropdownMenu);
-            }
-
-            if (!$("#pdfLinkSidebar").length) {
-              var pdfDownoadButtonSidebar = $('<li class="menu__list-item menu__list-item--collapsed" id="pdfLinkSidebar"><a role="button" class="menu__link menu__link--sublist">${pluginOptions.downloadButtonText}</a><ul class="menu__list" id="pdfLinkSidebarMenu" style=""></ul></li>');
-              $('.navbar-sidebar__items > .menu > .menu__list').append(pdfDownoadButtonSidebar);
-              $('#pdfLinkSidebar').click(function() {
-                $('#pdfLinkSidebar').toggleClass('menu__list-item--collapsed');
-              });
-              $('.navbar__toggle').click(fillDownloadSidebarMenu);
-            }
+            var pdfDownoadButtonSidebar = $('<li class="menu__list-item menu__list-item--collapsed" id="pdfLinkSidebar"><a role="button" class="menu__link menu__link--sublist">${pluginOptions.downloadButtonText}</a><ul class="menu__list" id="pdfLinkSidebarMenu" style=""></ul></li>');
+            $('.navbar-sidebar__items > .menu > .menu__list').append(pdfDownoadButtonSidebar);
+            $('#pdfLinkSidebar').click(function() {
+              $('#pdfLinkSidebar').toggleClass('menu__list-item--collapsed');
+            });
+            $('.navbar__toggle').click(fillDownloadSidebarMenu);
           }
   
           $(window).on('load', function () {
-            setInterval(checkAndInsertPdfButtons, 1000);
+            fetch('/handbook/pdfs.json')
+            .then((response) => response.json())
+            .then(function(json) {
+              pdfData = json;
+              insertPdfButtons();
+            });
           });
 
         </script>
