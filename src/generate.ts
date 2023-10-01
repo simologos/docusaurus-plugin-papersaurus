@@ -96,11 +96,11 @@ export async function generatePdfFiles(
       let folderName = '';
       let productTitle = '';
 
-      if (pluginOptions.productTitles && pluginOptions.productTitles.length >= i) {
+      if (pluginOptions.productTitles && pluginOptions.productTitles.length > i) {
         productTitle = pluginOptions.productTitles[i];
       }
 
-      if (pluginOptions.subfolders && pluginOptions.subfolders.length >= i) {
+      if (pluginOptions.subfolders && pluginOptions.subfolders.length > i) {
         folderName = pluginOptions.subfolders[i];
       }
 
@@ -366,8 +366,6 @@ async function createPdfFromArticles(
 
   console.log(`${pluginLogPrefix}Creating PDF ${buildDir}\\${pdfName}.pdf...`);
 
-  const pdfFooterRegex = new RegExp(pluginOptions.footerParser);
-
   const titlePdfFile = join(buildDir, `${pdfName}.title.pdf`);
   const contentRawPdfFile = join(buildDir, `${pdfName}.content.raw.pdf`);
   const contentHtmlFile = join(buildDir, `${pdfName}.content.html`);
@@ -498,7 +496,7 @@ async function createPdfFromArticles(
   const dataBuffer = fs.readFileSync(contentRawPdfFile);
   const parsedData = await pdfParse(dataBuffer);
 
-  htmlContent = getPageWithFixedToc(pdfFooterRegex, tocLinksInfos, parsedData.text, htmlContent);
+  htmlContent = getPageWithFixedToc(pluginOptions.footerParser, tocLinksInfos, parsedData.text, htmlContent);
 
   await generateContentPdf(contentPdfFile);
 

@@ -5,30 +5,62 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export type PapersaurusPluginOptions = {
-    addDownloadButton: boolean,
-    autoBuildPdfs: boolean,
-    downloadButtonText: string,
-    ignoreDocs: string[],
-    stylesheets: string[],
-    alwaysIncludeSiteStyles: boolean,
-    scripts: string[],
-    coverPageHeader: string,
-    coverPageFooter: string,
-    getPdfCoverPage: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string, version: string) => string;
-    getPdfPageHeader: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string, version: string) => string;
-    getPdfPageFooter: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string, version: string) => string;
-    margins: Margins,
-    coverMargins: Margins,
-    author: string,
-    footerParser: string,
-    keepDebugHtmls: boolean,
-    sidebarNames: string[],
-    subfolders: string[],
-    productTitles: string[],
-    useExtraPaths: UsePath[],
-    ignoreCssSelectors: string[]
+export interface PluginOptions {
+  addDownloadButton?: boolean;
+  autoBuildPdfs?: boolean;
+  downloadButtonText?: string;
+  ignoreDocs?: string[];
+  stylesheets?: string[];
+  alwaysIncludeSiteStyles?: boolean;
+  scripts?: string[];
+  coverPageHeader?: string;
+  coverPageFooter?: string;
+  getPdfCoverPage?: PageFunction;
+  getPdfPageHeader?: PageFunction;
+  getPdfPageFooter?: PageFunction;
+  margins?: Margins;
+  coverMargins?: Margins;
+  author?: string;
+  footerParser?: RegExp;
+  keepDebugHtmls?: boolean;
+  sidebarNames?: string[];
+  subfolders?: string[];
+  productTitles?: string[];
+  useExtraPaths?: UsePath[];
+  ignoreCssSelectors?: string[];
 }
+
+export type PapersaurusPluginOptions = {
+  addDownloadButton: boolean,
+  autoBuildPdfs: boolean,
+  downloadButtonText: string,
+  ignoreDocs: string[],
+  stylesheets: string[],
+  alwaysIncludeSiteStyles: boolean,
+  scripts: string[],
+  coverPageHeader: string,
+  coverPageFooter: string,
+  getPdfCoverPage: PageFunction;
+  getPdfPageHeader: PageFunction;
+  getPdfPageFooter: PageFunction;
+  margins: Margins,
+  coverMargins: Margins,
+  author: string,
+  footerParser: RegExp,
+  keepDebugHtmls: boolean,
+  sidebarNames: string[],
+  subfolders: string[],
+  productTitles: string[],
+  useExtraPaths: UsePath[],
+  ignoreCssSelectors: string[]
+}
+
+export type PageFunction = (
+  siteConfig: any,
+  pluginConfig: PapersaurusPluginOptions,
+  pageTitle: string,
+  version: string
+) => string;
 
 export type UsePath = {
   serverPath: string,

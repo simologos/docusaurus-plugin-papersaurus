@@ -7,7 +7,8 @@
 
 import {LoadContext, Plugin, DocusaurusConfig} from '@docusaurus/types';
 import {generatePdfFiles} from './generate';
-import {PapersaurusPluginOptions} from './types';
+import {PluginOptions, PapersaurusPluginOptions} from './types';
+import {processOptions} from './validateOptions';
 import importFresh from 'import-fresh';
 import * as fs from "fs";
 
@@ -21,8 +22,10 @@ function loadConfig(configPath: string): DocusaurusConfig {
 
 export default function (
   _context: LoadContext,
-  pluginOptions: PapersaurusPluginOptions,
+  options?: PluginOptions,
 ): Plugin<void> {
+
+  let pluginOptions:PapersaurusPluginOptions = processOptions(options);
 
   return {
 
@@ -226,3 +229,5 @@ export default function (
 
   };
 }
+
+export { validateOptions } from "./validateOptions";
