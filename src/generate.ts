@@ -87,6 +87,11 @@ export async function generatePdfFiles(
 
   // Loop through all found versions
   for (const versionInfo of (docPlugin.content as LoadedContent).loadedVersions) {
+    if (pluginOptions.versions.length != 0 && !pluginOptions.versions.includes(versionInfo.versionName)) {
+      // Skip this version as it was not specified in versions option.
+      continue;
+    }
+
     console.log(`${pluginLogPrefix}Processing version '${versionInfo.label}'`);
 
     if (pluginOptions.sidebarNames.length == 0) {

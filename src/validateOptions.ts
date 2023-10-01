@@ -87,6 +87,7 @@ const schema = Joi.object<PapersaurusPluginOptions>({
   footerParser: Joi.object<RegExp>().instance(RegExp),
   keepDebugHtmls: Joi.boolean().default(false),
   sidebarNames: isStringOrArrayOfStrings.default([]),
+  versions: isStringOrArrayOfStrings.default([]),
   subfolders: isStringOrArrayOfStrings.default([]),
   productTitles: isStringOrArrayOfStrings.default([]),
   useExtraPaths: Joi.array().items(Joi.object<UsePath>({

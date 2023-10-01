@@ -24,6 +24,7 @@ export interface PluginOptions {
   footerParser?: RegExp;
   keepDebugHtmls?: boolean;
   sidebarNames?: string[];
+  versions?: string[];
   subfolders?: string[];
   productTitles?: string[];
   useExtraPaths?: UsePath[];
@@ -40,15 +41,16 @@ export type PapersaurusPluginOptions = {
   scripts: string[],
   coverPageHeader: string,
   coverPageFooter: string,
-  getPdfCoverPage: PageFunction;
-  getPdfPageHeader: PageFunction;
-  getPdfPageFooter: PageFunction;
+  getPdfCoverPage: PageFunction,
+  getPdfPageHeader: PageFunction,
+  getPdfPageFooter: PageFunction,
   margins: Margins,
   coverMargins: Margins,
   author: string,
   footerParser: RegExp,
   keepDebugHtmls: boolean,
   sidebarNames: string[],
+  versions: string[],
   subfolders: string[],
   productTitles: string[],
   useExtraPaths: UsePath[],
