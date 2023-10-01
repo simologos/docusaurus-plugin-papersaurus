@@ -20,8 +20,6 @@ It uses  [Puppeteer](https://pptr.dev/) to convert html pages to PDF.
 
 2. Puppeteer does not yet support the generation of TOCs. See [this feature request](https://github.com/puppeteer/puppeteer/issues/1778) and [this Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=840455). Therefore this package generates a PDF, then parses it again to update the page numbers in the TOC. Therefore the parameter  footerParser...
 
-3. This plugin does not support auto generated sidebars! Please create a custom sidebar in the file `sidebars.js`.
-
 ## Installation
 
 ```
@@ -43,28 +41,10 @@ plugins: [
       {
         keepDebugHtmls: false,
         sidebarNames: ['someSidebar'],
-        rootDocIds: [
-          { version: 'default', rootDocId: 'start_overview'}
-        ],
         addDownloadButton: true,
         autoBuildPdfs: true,
-        downloadButtonText: 'Download as PDF',
         ignoreDocs: ['licenses'],
-        stylesheets: [],
-        scripts: [],
-        coverPageHeader: `...`,
-        coverPageFooter: `...`,
-        getPdfCoverPage: (siteConfig, pluginConfig, pageTitle, version) => {
-          return `...`;
-        },
-        getPdfPageHeader: (siteConfig, pluginConfig, pageTitle) => {
-          return `...`;
-        },
-        getPdfPageFooter: (siteConfig, pluginConfig, pageTitle) => {
-          return `...`;
-        },
-        author: 'Author name',
-        footerParser: /© Your company\d{4}-\d{2}-\d{2}Page \d* \/ \d*/g,
+        author: 'Author name'
       },
     ],
   ],
@@ -72,8 +52,9 @@ plugins: [
 
 ### autoBuildPdfs
 
-Set this parameter to `true`, if you want the plugin to automatically build the PDF files after each docusaurus build.
-Alternativeley you can also trigger PDF file generation manually on docusaurus command line..
+Set this parameter to `true`, if you want the plugin to automatically build the PDF files after each docusaurus build. If this is not set the environment variable BUILD_PDF needs to be set before running `docusaurus build`.
+
+Default: `true`
 
 ### keepDebugHtmls
 
@@ -82,9 +63,19 @@ After generating the PDF file, these temporary HTML files are deleted. You may w
 
 Set this parameter to `true` to keep the files.
 
+Default: `false`
+
 ### sidebarNames
 
-The plugin is using your `sidebars.js` file to find the sections and documents. Since the file can contain multiple sidebars, add the name(s) of the sidebar(s) that should be used to generate files.
+The plugin is using your `sidebars.js` file to find the sections and documents. Since the file can contain multiple sidebars, add the name(s) of the sidebar(s) that should be used to generate files. If none is specified all will be used.
+
+Default: `[]`
+
+### versions
+
+Specify documentation versions to generate pdfs for. If none is specified pdfs will be generated for all versions.
+
+Default: `[]`
 
 ### subfolders
 
@@ -102,6 +93,8 @@ Example if the main sidebar content is located directly in /doc:
   subfolders: ['', 'otherDoc'],
 ```
 
+Default: `[]`
+
 ### productTitles
 
 Add the product name for the different sidebars. This title will be included on the cover page as well as in the header.
@@ -115,55 +108,62 @@ The following example shows the configuration if you want to display the product
 
 This would display the 'Other' name on the cover page and the header for all documentation downloaded from the 'otherSidebar' sidebar but not from the 'someSidebar'
 
-### rootDocIds
-
-Using `slug: ...` in the markdown files to change the URL  is not supported by this plugin with a single exception:
-You may use `slug: /` for the root document that appears on root URL. If you use that The plugin needs to kown which document is used as root document and you have to configure the id of this document here.
-
-Since the id of the root document may change with the versions, you can optionally configure a specific id for a version and a default id for all other versions.
-The following sample contains a specific id for document version '1.x' and a default id for all other verisons:
-
-```
-  rootDocIds: [
-    { version: 'default', rootDocId: 'start_overview'},
-    { version: '1.x', rootDocId: 'overview'}
-  ],
-```
+Default: `[]`
 
 ### addDownloadButton
 
 Set this parameter to `true`, if you want the plugin to add a PDF download button to the documentation website.
+
+Default: `true`
 
 ### downloadButtonText
 
 Use this parameter to define the text of the download button.
 If you prefer to have an icon instead of a text button, you can replace the text with a button in CSS stylesheet.
 
+Default: `Download as PDF`
+
 ### ignoreDocs
 
 If you want to exclude some documents from the section or overall PDF's and want to have it only available as individual chapter PDF, add the id to this parameter.
 
-The parameter type is a string array,
+The parameter type is a string array.
+
+Default: `[]`
 
 ### stylesheets
 
 Add the style sheets you would use for printing here. Add the same as in `stylesheets` if you want to use the styles used on the docusaurus web page.
 
-The parameter type is a string array,
+The parameter type is a string array.
+
+Default: `[]`
+
+### alwaysIncludeSiteStyles
+
+Set this parameter to `true`, if you want the plugin to include the styles generated by docusaurus even when you have specified your own `stylesheets`.
+
+Default: `false`
 
 ### scripts
 
 Add the scripts you would use for printing here. Add the same as in `scripts` if you want to use the scripts used on the docusaurus web page.
 
-The parameter type is a string array,
+The parameter type is a string array.
+
+Default: `[]`
 
 ### coverPageHeader
 
 String containing HTML code which will be displayed as the header of the cover page.
 
+Default: `'...'`
+
 ### coverPageFooter
 
 String containing HTML code which will be displayed as the footer of the cover page
+
+Default: `'...'`
 
 ### getPdfCoverPage
 
@@ -249,16 +249,53 @@ Example:
 
 ```/© Your Company\d{4}-\d{2}-\d{2}Page \d* \/ \d*/g```
 
-## Command line
+### coverMargins
 
-Instead of automatic run after docusaurus build, the generation of the PDF files can also be requested on docusaurus command line.
-Use the following command to execute it on command line:
+Margins for the cover page.
+
+Default:
 ```
-docusaurus papersaurus:build
+{
+  top: "10cm",
+  right: "0",
+  bottom: "3cm",
+  left: "0",
+}
 ```
+
+### margins
+
+Margins for content pages.
+
+Default:
+```
+{
+  top: "5cm",
+  right: "2cm",
+  bottom:"2.3cm",
+  left: "2cm",
+}
+```
+
+### useExtraPaths
+
+In case you have stylesheets or scripts that needs to be included from some other folder than the output folder specify them here.
+
+Example:
+```useExtraPaths: [{serverPath: "/", localPath: ".."}]```
+
+Default: `[]`
+
+### ignoreCssSelectors
+
+A list of css selectors that can be used to remove elements of the html before rendering it to pdf.
+
+Example:
+```ignoreCssSelectors: [".breadcrumbs", ".theme-doc-version-badge"]```
+
+Default: `[]`
 
 ## Limitation
 
 - Just documentations are generated, no pages or blog posts
 - No support for translations
-- Remaming documents with `slug: ...` is only supported to define the root document.

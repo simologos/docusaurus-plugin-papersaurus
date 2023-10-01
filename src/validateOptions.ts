@@ -64,7 +64,7 @@ const schema = Joi.object<PapersaurusPluginOptions>({
   downloadButtonText: Joi.string().default("Download as PDF"),
   ignoreDocs: isStringOrArrayOfStrings.default([]),
   stylesheets: isStringOrArrayOfStrings.default([]),
-  alwaysIncludeSiteStyles: Joi.boolean().default(true),
+  alwaysIncludeSiteStyles: Joi.boolean().default(false),
   scripts: isStringOrArrayOfStrings.default([]),
   coverPageHeader: Joi.string().default("..."),
   coverPageFooter: Joi.string().default("..."),
