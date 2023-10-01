@@ -42,6 +42,7 @@ export default function (
 
       return {
         headTags: [`
+        ${(pluginOptions.jQueryUrl ? "<script src='" + pluginOptions.jQueryUrl + "'></script>" : "")}
         <script>
           var pdfData = {};
           const getPdfDataForHref = function(href) {

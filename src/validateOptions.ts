@@ -95,6 +95,7 @@ const schema = Joi.object<PapersaurusPluginOptions>({
     localPath: Joi.string().required(),
   })).default([]),
   ignoreCssSelectors: isStringOrArrayOfStrings.default([]),
+  jQueryUrl: Joi.string().allow('').default("https://code.jquery.com/jquery-3.6.0.min.js"),
 });
 
 type ValidateFn = (

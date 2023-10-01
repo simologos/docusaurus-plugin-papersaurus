@@ -29,6 +29,7 @@ export interface PluginOptions {
   productTitles?: string[];
   useExtraPaths?: UsePath[];
   ignoreCssSelectors?: string[];
+  jQueryUrl?: string;
 }
 
 export type PapersaurusPluginOptions = {
@@ -54,7 +55,8 @@ export type PapersaurusPluginOptions = {
   subfolders: string[],
   productTitles: string[],
   useExtraPaths: UsePath[],
-  ignoreCssSelectors: string[]
+  ignoreCssSelectors: string[],
+  jQueryUrl: string,
 }
 
 export type PageFunction = (

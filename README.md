@@ -295,6 +295,12 @@ Example:
 
 Default: `[]`
 
+### jQueryUrl
+
+This plugin requires jQuery to insert a download button if `addDownloadButton` is set to `true`. Leave empty in case you provide jQuery some other way.
+
+Default: `https://code.jquery.com/jquery-3.6.0.min.js`
+
 ## Limitation
 
 - Just documentations are generated, no pages or blog posts
