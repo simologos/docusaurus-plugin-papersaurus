@@ -146,7 +146,10 @@ export default function (
           }
 
           const checkAndInsertPdfButtons = function() {
-            if ( !$("#pdfLink").length ) {
+            if (!$("html").hasClass("plugin-docs")) {
+              return;
+            }
+            if (!$("#pdfLink").length) {
               var pdfDownloadButton = $('' +
               '<div class="navbar__item dropdown dropdown--hoverable dropdown--right" id="pdfDownloadMenu">' +
               '  <a class="navbar__item navbar__link pdfLink" id="pdfLink" href="#">${pluginOptions.downloadButtonText}</a>' +
