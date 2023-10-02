@@ -145,22 +145,26 @@ export default function (
             $('#pdfLinkSidebarMenu').append(printMenuContent);
           }
 
-          const insertPdfButtons = function() {
-            var pdfDownloadButton = $('' +
-            '<div class="navbar__item dropdown dropdown--hoverable dropdown--right" id="pdfDownloadMenu">' +
-            '  <a class="navbar__item navbar__link pdfLink" id="pdfLink" href="#">${pluginOptions.downloadButtonText}</a>' +
-            '  <ul class="dropdown__menu" id="pdfDownloadMenuList"></ul>' +
-            '</div>');
-            $(".navbar__items--right").prepend(pdfDownloadButton);
+          const checkAndInsertPdfButtons = function() {
+            if ( !$("#pdfLink").length ) {
+              var pdfDownloadButton = $('' +
+              '<div class="navbar__item dropdown dropdown--hoverable dropdown--right" id="pdfDownloadMenu">' +
+              '  <a class="navbar__item navbar__link pdfLink" id="pdfLink" href="#">${pluginOptions.downloadButtonText}</a>' +
+              '  <ul class="dropdown__menu" id="pdfDownloadMenuList"></ul>' +
+              '</div>');
+              $(".navbar__items--right").prepend(pdfDownloadButton);
 
-            $("#pdfDownloadMenu").mouseenter(fillDownloadDropdownMenu);
+              $("#pdfDownloadMenu").mouseenter(fillDownloadDropdownMenu);
+            }
 
-            var pdfDownoadButtonSidebar = $('<li class="menu__list-item menu__list-item--collapsed" id="pdfLinkSidebar"><a role="button" class="menu__link menu__link--sublist">${pluginOptions.downloadButtonText}</a><ul class="menu__list" id="pdfLinkSidebarMenu" style=""></ul></li>');
-            $('.navbar-sidebar__items > .menu > .menu__list').append(pdfDownoadButtonSidebar);
-            $('#pdfLinkSidebar').click(function() {
-              $('#pdfLinkSidebar').toggleClass('menu__list-item--collapsed');
-            });
-            $('.navbar__toggle').click(fillDownloadSidebarMenu);
+            if (!$("#pdfLinkSidebar").length) {
+              var pdfDownoadButtonSidebar = $('<li class="menu__list-item menu__list-item--collapsed" id="pdfLinkSidebar"><a role="button" class="menu__link menu__link--sublist">${pluginOptions.downloadButtonText}</a><ul class="menu__list" id="pdfLinkSidebarMenu" style=""></ul></li>');
+              $('.navbar-sidebar__items > .menu > .menu__list').append(pdfDownoadButtonSidebar);
+              $('#pdfLinkSidebar').click(function() {
+                $('#pdfLinkSidebar').toggleClass('menu__list-item--collapsed');
+              });
+              $('.navbar__toggle').click(fillDownloadSidebarMenu);
+            }
           }
   
           $(window).on('load', function () {
@@ -168,7 +172,8 @@ export default function (
             .then((response) => response.json())
             .then(function(json) {
               pdfData = json;
-              insertPdfButtons();
+              checkAndInsertPdfButtons();
+              setInterval(checkAndInsertPdfButtons, 1000);
             });
           });
 
