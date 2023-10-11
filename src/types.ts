@@ -33,33 +33,7 @@ export interface PluginOptions {
   getPdfFileName?: FileNameFunction;
 }
 
-export type PapersaurusPluginOptions = {
-  addDownloadButton: boolean,
-  autoBuildPdfs: boolean,
-  downloadButtonText: string,
-  ignoreDocs: string[],
-  stylesheets: string[],
-  alwaysIncludeSiteStyles: boolean,
-  scripts: string[],
-  coverPageHeader: string,
-  coverPageFooter: string,
-  getPdfCoverPage: PageFunction,
-  getPdfPageHeader: PageFunction,
-  getPdfPageFooter: PageFunction,
-  margins: Margins,
-  coverMargins: Margins,
-  author: string,
-  footerParser: RegExp,
-  keepDebugHtmls: boolean,
-  sidebarNames: string[],
-  versions: string[],
-  subfolders: string[],
-  productTitles: string[],
-  useExtraPaths: UsePath[],
-  ignoreCssSelectors: string[],
-  jQueryUrl: string,
-  getPdfFileName: FileNameFunction,
-}
+export type PapersaurusPluginOptions = Required<PluginOptions>;
 
 export type PageFunction = (
   siteConfig: any,
