@@ -142,11 +142,16 @@ export async function generatePdfFiles(
 
       let sidebar = versionInfo.sidebars[sidebarName];
       if (sidebar) {
+        let projectName = siteConfig.projectName;
+        if (!projectName) {
+          console.log(`${pluginLogPrefix}Docusaurus projectName not set, using placeholder...`);
+          projectName = 'Unnamed project';
+        }
         // Create a fake category with root of sidebar
         const rootCategory:any = {
           type: 'category',
-          label: siteConfig.projectName,
-          unversionedId: siteConfig.projectName,
+          label: projectName,
+          unversionedId: projectName,
           items: sidebar,
           collapsed: true,
           collapsible: true
