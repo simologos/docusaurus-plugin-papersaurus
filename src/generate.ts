@@ -218,6 +218,9 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
         }
         readHtmlForItem(sideBarItem, parentTitles, rootDocUrl, path, version, siteConfig);
       }
+      else {
+        sideBarItem.unversionedId = sideBarItem.label || "untitled";
+      }
       const newParentTitles = [...parentTitles];
       newParentTitles.push(sideBarItem.label);
       for (const categorySubItem of sideBarItem.items) {
