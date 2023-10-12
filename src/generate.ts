@@ -456,6 +456,8 @@ async function createPdfFromArticles(
       $(ignoreSelector).remove();
     }
   }
+  $(".breadcrumbs").remove();
+  $(".theme-doc-version-badge").remove();
 
   fullHtml = $.html();
 
@@ -494,7 +496,26 @@ async function createPdfFromArticles(
       `<a href="${tocLinkInfo.href}"><span>${tocLinkInfo.text}</span><span class="dotLeader"></span><span class="pageNumber">_</span></a>`);
   }
 
-  let htmlStyles = '';
+  let htmlStyles = `<style>
+  h1 {
+    page-break-before: always;
+  }
+
+  .toc-headings a {
+    width: 100%;
+    display: flex;
+  }
+
+  .dotLeader {
+    flex-grow: 1;
+    margin: 0 0.2cm;
+    border-bottom: 2px dotted;
+    margin-bottom: 6px;
+  }
+  .theme-code-block, .theme-admonition {
+    break-inside: avoid;
+  }
+  </style>`;
   const hasCustomStyles = pluginOptions.stylesheets && pluginOptions.stylesheets.length > 0;
   if (hasCustomStyles) {
     for (const stylesheet of pluginOptions.stylesheets) {
