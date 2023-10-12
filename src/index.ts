@@ -45,6 +45,11 @@ export default function (
         ${(pluginOptions.jQueryUrl ? "<script src='" + pluginOptions.jQueryUrl + "'></script>" : "")}
         <script>
           var pdfData = {};
+
+          const getBaseUrl = function(href) {
+            return '${siteConfig.baseUrl}${siteConfig.baseUrl?.endsWith("/") ? "" : "/"}';
+          };
+
           const getPdfDataForHref = function(href) {
             if (href in pdfData) {
               return pdfData[href];
@@ -59,7 +64,7 @@ export default function (
               return pdfData[href];
             }
             return "";
-          }
+          };
 
           const getDownloadItems = function() {
             var activePageSidebarLink;
@@ -77,7 +82,7 @@ export default function (
             var activePdfData = getPdfDataForHref(activePageSidebarLink.attr('href'));
             downloadItems.push({
               title: 'Download this chapter (' + activePageSidebarLink.text() +')',
-              path: "${siteConfig.baseUrl}" + activePdfData.file,
+              path: getBaseUrl() + activePdfData.file,
               type: 'page'
             });
 
@@ -90,7 +95,7 @@ export default function (
                   var parentPdfData = getPdfDataForHref(parentSidebarLink.attr('href'));
                   downloadItems.push({
                     title: 'Download section (' + parentSidebarLink.text() +')',
-                    path: "${siteConfig.baseUrl}" + parentPdfData.file,
+                    path: getBaseUrl() + parentPdfData.file,
                     type: 'section'
                   });
                 }
@@ -103,12 +108,12 @@ export default function (
 
             downloadItems.push({
               title: 'Download complete documentation',
-              path: "${siteConfig.baseUrl}" + activePdfData.root,
+              path: getBaseUrl() + activePdfData.root,
               type: 'page'
             });
 
             return downloadItems;
-          }
+          };
 
           const fillDownloadDropdownMenu = function() {
             $('#pdfDownloadMenuList').empty();
@@ -126,7 +131,7 @@ export default function (
             }
 
             $("#pdfDownloadMenuList").append(printPopupContent);
-          }
+          };
 
           const fillDownloadSidebarMenu = function() {
             $('#pdfLinkSidebarMenu').empty();
@@ -143,7 +148,7 @@ export default function (
               printMenuContent = '<li>No PDF downloads on this page</li>';
             }
             $('#pdfLinkSidebarMenu').append(printMenuContent);
-          }
+          };
 
           const checkAndInsertPdfButtons = function() {
             if (!$("html").hasClass("plugin-docs")) {
@@ -168,10 +173,10 @@ export default function (
               });
               $('.navbar__toggle').click(fillDownloadSidebarMenu);
             }
-          }
-  
+          };
+
           $(window).on('load', function () {
-            fetch('/handbook/pdfs.json')
+            fetch(getBaseUrl() + 'pdfs.json')
             .then((response) => response.json())
             .then(function(json) {
               pdfData = json;
@@ -179,9 +184,7 @@ export default function (
               setInterval(checkAndInsertPdfButtons, 1000);
             });
           });
-
-        </script>
-        `
+        </script>`
         ],
       };
     },
