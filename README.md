@@ -73,7 +73,7 @@ plugins: [
 ### autoBuildPdfs
 
 Set this parameter to `true`, if you want the plugin to automatically build the PDF files after each docusaurus build.
-Alternativeley you can also trigger PDF file generation manually on docusaurus command line..
+Alternatively, you can also trigger PDF file generation manually using the docusaurus command line..
 
 ### keepDebugHtmls
 
