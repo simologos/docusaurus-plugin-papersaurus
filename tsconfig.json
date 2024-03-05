@@ -4,8 +4,8 @@
     "module": "commonjs",
     "lib": ["es2017","es2019.array","dom"],
     "declaration": true,
-    "declarationMap": true,    
-    "types": ["node", "@docusaurus/module-type-aliases"],
+    "declarationMap": false,
+    "types": ["node"],
 
     /* Strict Type-Checking Options */
     "strict": true,
@@ -34,7 +34,8 @@
     "incremental": true,
     "tsBuildInfoFile": "./lib/.tsbuildinfo",
     "rootDir": "src",
-    "outDir": "lib"
+    "outDir": "lib",
+    "skipLibCheck": true
   },
-  "exclude": ["node_modules", "**/__tests__/**/*", "**/lib/**/*"]
+  "exclude": ["node_modules", "**/lib/**/*"]
 }
