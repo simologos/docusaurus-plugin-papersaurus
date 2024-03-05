@@ -9,7 +9,7 @@ import {
   PapersaurusPluginOptions,
   TocInfo,
 } from './types';
-import {Props, LoadedPlugin} from '@docusaurus/types';
+import { Props, LoadedPlugin } from '@docusaurus/types';
 import { LoadedContent, LoadedVersion, DocMetadata } from "@docusaurus/plugin-content-docs"
 import puppeteer = require('puppeteer');
 import toc = require('html-toc');
@@ -29,7 +29,7 @@ const pluginLogPrefix = '[papersaurus] ';
 export async function generatePdfFiles(
   outDir: string,
   pluginOptions: PapersaurusPluginOptions,
-  {siteConfig, plugins}: Props) {
+  { siteConfig, plugins }: Props) {
 
   console.log(`${pluginLogPrefix}Execute generatePdfFiles...`);
 
@@ -43,7 +43,7 @@ export async function generatePdfFiles(
   if (docsPlugins.length > 1 || docsPlugins.length == 0) {
     throw new Error(`${pluginLogPrefix}Too many or too few docs plugins found, only 1 is supported.`);
   }
-  let docPlugin:LoadedPlugin = docsPlugins[0];
+  let docPlugin: LoadedPlugin = docsPlugins[0];
 
   // Check if docusaurus build directory exists
   const docusaurusBuildDir = outDir;
@@ -97,7 +97,7 @@ export async function generatePdfFiles(
 
     if (pluginOptions.sidebarNames.length == 0) {
       // No sidebar specified, use all of them.
-      let allSidebarNames:string[] = [];
+      let allSidebarNames: string[] = [];
       for (const name in versionInfo.sidebars) {
         allSidebarNames.push(name);
       }
@@ -129,7 +129,7 @@ export async function generatePdfFiles(
       if (folderName) {
         rootDocUrl = `${siteAddress}docs/${folderName}/`;
       }
-      
+
       if (versionPath) {
         rootDocUrl = `${rootDocUrl}${versionPath}/`;
       }
@@ -148,7 +148,7 @@ export async function generatePdfFiles(
           projectName = 'Unnamed project';
         }
         // Create a fake category with root of sidebar
-        const rootCategory:any = {
+        const rootCategory: any = {
           type: 'category',
           label: projectName,
           unversionedId: projectName,
@@ -184,9 +184,9 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}generatePdfFiles finished!`);
 }
 
-function saveUrlToFileMappingsRecursive(sideBarItem: any, root: string, output:Map<string, any>): any {
+function saveUrlToFileMappingsRecursive(sideBarItem: any, root: string, output: Map<string, any>): any {
   if (sideBarItem.permalink) {
-    output.set(sideBarItem.permalink, {root: root, file: sideBarItem.pdfFilename});
+    output.set(sideBarItem.permalink, { root: root, file: sideBarItem.pdfFilename });
   }
 
   if (sideBarItem.items) {
@@ -209,11 +209,11 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
         let path = htmlDir;
         for (const doc of version.docs) {
           if (doc.id == sideBarItem.link.id) {
-              sideBarItem.id = doc.id;
-              sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
-              sideBarItem.permalink = doc.permalink;
-              path = join(path, getPermaLink(doc, siteConfig));
-              break;
+            sideBarItem.id = doc.id;
+            sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
+            sideBarItem.permalink = doc.permalink;
+            path = join(path, getPermaLink(doc, siteConfig));
+            break;
           }
         }
         readHtmlForItem(sideBarItem, parentTitles, rootDocUrl, path, version, siteConfig);
@@ -226,8 +226,8 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
       for (const categorySubItem of sideBarItem.items) {
         pickHtmlArticlesRecursive(categorySubItem, newParentTitles, version, rootDocUrl, htmlDir, siteConfig);
         if (!hasDocLink && !sideBarItem.stylePath) {
-            sideBarItem.stylePath = categorySubItem.stylePath;
-            sideBarItem.scriptPath = categorySubItem.scriptPath;
+          sideBarItem.stylePath = categorySubItem.stylePath;
+          sideBarItem.scriptPath = categorySubItem.scriptPath;
         }
       }
       break;
@@ -237,11 +237,11 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
       let path = htmlDir;
       for (const doc of version.docs) {
         if (doc.id == sideBarItem.id || doc.unversionedId == sideBarItem.id) {
-            sideBarItem.label = doc.title;
-            sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
-            sideBarItem.permalink = doc.permalink;
-            path = join(path, getPermaLink(doc, siteConfig));
-            break;
+          sideBarItem.label = doc.title;
+          sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
+          sideBarItem.permalink = doc.permalink;
+          path = join(path, getPermaLink(doc, siteConfig));
+          break;
         }
       }
       readHtmlForItem(sideBarItem, parentTitles, rootDocUrl, path, version, siteConfig);
@@ -667,27 +667,39 @@ const getPermaLink = (doc: DocMetadata, siteConfig: any) => {
 };
 
 const decodeHtml = (str: string) => {
-  const regex = /&amp;|&lt;|&gt;|&quot;|&apos;|&#x200B;/g;
+  // Taken from here: https://stackoverflow.com/a/39243641
+  const htmlEntities: { [key: string]: string } = {
+    nbsp: ' ',
+    cent: '¢',
+    pound: '£',
+    yen: '¥',
+    euro: '€',
+    copy: '©',
+    reg: '®',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    amp: '&',
+    apos: '\''
+  };
 
-  const htmlString = str.replace(regex, (match: string) => {
-    if (match === '&amp;') {
-      return '&';
-    } else if (match === '&lt;') {
-      return ''
-    } else if (match === '&gt;') {
-      return '>';
-    } else if (match === '&quot;') {
-      return '"';
-    } else if (match === '&apos;') {
-      return '\'';
-    } else if (match === '&#x200B;') {
-      return '';
+  return str.replace(/\&([^;]+);/g, function (entity, entityCode) {
+    var match;
+
+    if (entityCode in htmlEntities) {
+      return htmlEntities[entityCode];
+      /*eslint no-cond-assign: 0*/
+    } else if (match = entityCode.match(/^#x([\da-fA-F]+)$/)) {
+      return String.fromCharCode(parseInt(match[1], 16));
+      /*eslint no-cond-assign: 0*/
+    } else if (match = entityCode.match(/^#(\d+)$/)) {
+      return String.fromCharCode(~~match[1]);
+    } else {
+      return entity;
     }
-
-    return '';
-  });
-
-  return htmlString;
+  })
+    // taken from here: https://stackoverflow.com/a/11305926
+    .replace(/[\u200B-\u200D\uFEFF]/g, '');
 }
 
 const getPageWithFixedToc = (footerRegEx: RegExp, tocList: TocInfo[], pdfContent: string, htmlContent: string) => {
