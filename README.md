@@ -65,6 +65,12 @@ Set this parameter to `true` to keep the files.
 
 Default: `false`
 
+### puppeteerTimeout
+
+Large PDFs might cause a timeout error on puppeteer. Use this parameter to set the puppeteer timeout in ms.
+
+Default: `30000`
+
 ### sidebarNames
 
 The plugin is using your `sidebars.js` file to find the sections and documents. Since the file can contain multiple sidebars, add the name(s) of the sidebar(s) that should be used to generate files. If none is specified all will be used.

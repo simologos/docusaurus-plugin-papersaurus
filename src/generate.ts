@@ -417,7 +417,11 @@ async function createPdfFromArticles(
   const finalPdfFile = join(buildDir, `${pdfName}.pdf`);
 
   const coverPage = await browser.newPage();
-  await coverPage.setContent(pluginOptions.getPdfCoverPage(siteConfig, pluginOptions, documentTitle, documentVersion));
+  await coverPage.setContent(
+    pluginOptions.getPdfCoverPage(siteConfig, pluginOptions, documentTitle, documentVersion),
+    {
+      timeout: pluginOptions.puppeteerTimeout
+    });
   await coverPage.pdf({
     format: 'a4',
     path: titlePdfFile,
@@ -425,7 +429,8 @@ async function createPdfFromArticles(
     footerTemplate: pluginOptions.coverPageFooter,
     displayHeaderFooter: true,
     printBackground: true,
-    margin: pluginOptions.coverMargins
+    margin: pluginOptions.coverMargins,
+    timeout: pluginOptions.puppeteerTimeout
   });
   await coverPage.close();
 
@@ -582,7 +587,9 @@ async function createPdfFromArticles(
 
   async function generateContentPdf(targetFile: string) {
     await page.goto(siteAddress);
-    await page.setContent(htmlContent);
+    await page.setContent(htmlContent, {
+      timeout: pluginOptions.puppeteerTimeout
+    });
     await page.pdf({
       path: targetFile,
       format: 'a4',
@@ -591,7 +598,8 @@ async function createPdfFromArticles(
       displayHeaderFooter: true,
       printBackground: true,
       scale: 1,
-      margin: pluginOptions.margins
+      margin: pluginOptions.margins,
+      timeout: pluginOptions.puppeteerTimeout
     });
 
   }

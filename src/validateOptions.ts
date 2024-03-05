@@ -103,6 +103,7 @@ const schema = Joi.object<PapersaurusPluginOptions>({
   author: Joi.string().default(""),
   footerParser: Joi.object<RegExp>().instance(RegExp),
   keepDebugHtmls: Joi.boolean().default(false),
+  puppeteerTimeout: Joi.number().default(30000),
   sidebarNames: isStringOrArrayOfStrings.default([]),
   versions: isStringOrArrayOfStrings.default([]),
   subfolders: isStringOrArrayOfStrings.default([]),
