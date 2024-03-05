@@ -236,7 +236,7 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
       // Merge properties we need that is specified on the document.
       let path = htmlDir;
       for (const doc of version.docs) {
-        if (doc.id == sideBarItem.id) {
+        if (doc.id == sideBarItem.id || doc.unversionedId == sideBarItem.id) {
             sideBarItem.label = doc.title;
             sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
             sideBarItem.permalink = doc.permalink;
