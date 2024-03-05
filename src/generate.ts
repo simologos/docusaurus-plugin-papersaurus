@@ -9,7 +9,7 @@ import {
   PapersaurusPluginOptions,
   TocInfo,
 } from './types';
-import {Props, LoadedPlugin} from '@docusaurus/types';
+import { Props, LoadedPlugin } from '@docusaurus/types';
 import { LoadedContent, LoadedVersion, DocMetadata } from "@docusaurus/plugin-content-docs"
 import puppeteer = require('puppeteer');
 import toc = require('html-toc');
@@ -29,7 +29,7 @@ const pluginLogPrefix = '[papersaurus] ';
 export async function generatePdfFiles(
   outDir: string,
   pluginOptions: PapersaurusPluginOptions,
-  {siteConfig, plugins}: Props) {
+  { siteConfig, plugins }: Props) {
 
   console.log(`${pluginLogPrefix}Execute generatePdfFiles...`);
 
@@ -43,7 +43,7 @@ export async function generatePdfFiles(
   if (docsPlugins.length > 1 || docsPlugins.length == 0) {
     throw new Error(`${pluginLogPrefix}Too many or too few docs plugins found, only 1 is supported.`);
   }
-  let docPlugin:LoadedPlugin = docsPlugins[0];
+  let docPlugin: LoadedPlugin = docsPlugins[0];
 
   // Check if docusaurus build directory exists
   const docusaurusBuildDir = outDir;
@@ -97,7 +97,7 @@ export async function generatePdfFiles(
 
     if (pluginOptions.sidebarNames.length == 0) {
       // No sidebar specified, use all of them.
-      let allSidebarNames:string[] = [];
+      let allSidebarNames: string[] = [];
       for (const name in versionInfo.sidebars) {
         allSidebarNames.push(name);
       }
@@ -129,7 +129,7 @@ export async function generatePdfFiles(
       if (folderName) {
         rootDocUrl = `${siteAddress}docs/${folderName}/`;
       }
-      
+
       if (versionPath) {
         rootDocUrl = `${rootDocUrl}${versionPath}/`;
       }
@@ -148,7 +148,7 @@ export async function generatePdfFiles(
           projectName = 'Unnamed project';
         }
         // Create a fake category with root of sidebar
-        const rootCategory:any = {
+        const rootCategory: any = {
           type: 'category',
           label: projectName,
           unversionedId: projectName,
@@ -184,9 +184,9 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}generatePdfFiles finished!`);
 }
 
-function saveUrlToFileMappingsRecursive(sideBarItem: any, root: string, output:Map<string, any>): any {
+function saveUrlToFileMappingsRecursive(sideBarItem: any, root: string, output: Map<string, any>): any {
   if (sideBarItem.permalink) {
-    output.set(sideBarItem.permalink, {root: root, file: sideBarItem.pdfFilename});
+    output.set(sideBarItem.permalink, { root: root, file: sideBarItem.pdfFilename });
   }
 
   if (sideBarItem.items) {
@@ -209,11 +209,11 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
         let path = htmlDir;
         for (const doc of version.docs) {
           if (doc.id == sideBarItem.link.id) {
-              sideBarItem.id = doc.id;
-              sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
-              sideBarItem.permalink = doc.permalink;
-              path = join(path, getPermaLink(doc, siteConfig));
-              break;
+            sideBarItem.id = doc.id;
+            sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
+            sideBarItem.permalink = doc.permalink;
+            path = join(path, getPermaLink(doc, siteConfig));
+            break;
           }
         }
         readHtmlForItem(sideBarItem, parentTitles, rootDocUrl, path, version, siteConfig);
@@ -226,8 +226,8 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
       for (const categorySubItem of sideBarItem.items) {
         pickHtmlArticlesRecursive(categorySubItem, newParentTitles, version, rootDocUrl, htmlDir, siteConfig);
         if (!hasDocLink && !sideBarItem.stylePath) {
-            sideBarItem.stylePath = categorySubItem.stylePath;
-            sideBarItem.scriptPath = categorySubItem.scriptPath;
+          sideBarItem.stylePath = categorySubItem.stylePath;
+          sideBarItem.scriptPath = categorySubItem.scriptPath;
         }
       }
       break;
@@ -237,11 +237,11 @@ function pickHtmlArticlesRecursive(sideBarItem: any,
       let path = htmlDir;
       for (const doc of version.docs) {
         if (doc.id == sideBarItem.id || doc.unversionedId == sideBarItem.id) {
-            sideBarItem.label = doc.title;
-            sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
-            sideBarItem.permalink = doc.permalink;
-            path = join(path, getPermaLink(doc, siteConfig));
-            break;
+          sideBarItem.label = doc.title;
+          sideBarItem.unversionedId = doc.unversionedId.split("/").pop();
+          sideBarItem.permalink = doc.permalink;
+          path = join(path, getPermaLink(doc, siteConfig));
+          break;
         }
       }
       readHtmlForItem(sideBarItem, parentTitles, rootDocUrl, path, version, siteConfig);
