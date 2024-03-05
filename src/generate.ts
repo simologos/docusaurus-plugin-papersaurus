@@ -667,27 +667,39 @@ const getPermaLink = (doc: DocMetadata, siteConfig: any) => {
 };
 
 const decodeHtml = (str: string) => {
-  const regex = /&amp;|&lt;|&gt;|&quot;|&apos;|&#x200B;/g;
+  // Taken from here: https://stackoverflow.com/a/39243641
+  const htmlEntities: { [key: string]: string } = {
+    nbsp: ' ',
+    cent: '¢',
+    pound: '£',
+    yen: '¥',
+    euro: '€',
+    copy: '©',
+    reg: '®',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    amp: '&',
+    apos: '\''
+  };
 
-  const htmlString = str.replace(regex, (match: string) => {
-    if (match === '&amp;') {
-      return '&';
-    } else if (match === '&lt;') {
-      return ''
-    } else if (match === '&gt;') {
-      return '>';
-    } else if (match === '&quot;') {
-      return '"';
-    } else if (match === '&apos;') {
-      return '\'';
-    } else if (match === '&#x200B;') {
-      return '';
+  return str.replace(/\&([^;]+);/g, function (entity, entityCode) {
+    var match;
+
+    if (entityCode in htmlEntities) {
+      return htmlEntities[entityCode];
+      /*eslint no-cond-assign: 0*/
+    } else if (match = entityCode.match(/^#x([\da-fA-F]+)$/)) {
+      return String.fromCharCode(parseInt(match[1], 16));
+      /*eslint no-cond-assign: 0*/
+    } else if (match = entityCode.match(/^#(\d+)$/)) {
+      return String.fromCharCode(~~match[1]);
+    } else {
+      return entity;
     }
-
-    return '';
-  });
-
-  return htmlString;
+  })
+    // taken from here: https://stackoverflow.com/a/11305926
+    .replace(/[\u200B-\u200D\uFEFF]/g, '');
 }
 
 const getPageWithFixedToc = (footerRegEx: RegExp, tocList: TocInfo[], pdfContent: string, htmlContent: string) => {
