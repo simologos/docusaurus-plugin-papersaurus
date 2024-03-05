@@ -7,7 +7,8 @@
 
 import {LoadContext, Plugin, DocusaurusConfig} from '@docusaurus/types';
 import {generatePdfFiles} from './generate';
-import {PapersaurusPluginOptions} from './types';
+import {PluginOptions, PapersaurusPluginOptions} from './types';
+import {processOptions} from './validateOptions';
 import importFresh from 'import-fresh';
 import * as fs from "fs";
 
@@ -21,8 +22,10 @@ function loadConfig(configPath: string): DocusaurusConfig {
 
 export default function (
   _context: LoadContext,
-  pluginOptions: PapersaurusPluginOptions,
+  options?: PluginOptions,
 ): Plugin<void> {
+
+  let pluginOptions:PapersaurusPluginOptions = processOptions(options);
 
   return {
 
@@ -39,38 +42,29 @@ export default function (
 
       return {
         headTags: [`
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+        ${(pluginOptions.jQueryUrl ? "<script src='" + pluginOptions.jQueryUrl + "'></script>" : "")}
         <script>
+          var pdfData = {};
 
-          const slugFunction = function(unformattedString) {
-            var whitespace = /\\s/g;
-            var specials = /[\\u2000-\\u206F\\u2E00-\\u2E7F\\\'!"#$%&()*+,./:;<=>?@[\\]^\`{|}~’]/g;
-            if (typeof unformattedString !== 'string') {
-              return ''
-            }
-            unformattedString = unformattedString.toLowerCase();
-          
-            return unformattedString.trim()
-              .replace(specials, '')
-              .replace(whitespace, '-');
-          }
+          const getBaseUrl = function(href) {
+            return '${siteConfig.baseUrl}${siteConfig.baseUrl?.endsWith("/") ? "" : "/"}';
+          };
 
-          const getPdfPath = function() {
-            var pdfPath = document.location.pathname;
-            if (pdfPath.endsWith('/')) {
-              pdfPath = pdfPath.substr(0, pdfPath.length-1);
+          const getPdfDataForHref = function(href) {
+            if (href in pdfData) {
+              return pdfData[href];
             }
-            const checkRootDoc = new RegExp("/docs(((\/[0-9]+\.[0-9]+)|\/next)?)$");
-            if (!checkRootDoc.test(pdfPath)) {
-              // ends with document (not with /docs or /docs/x.x or /docs/next), remove document 
-              var lastSlashPos = pdfPath.lastIndexOf('/');
-              pdfPath = pdfPath.substr(0, lastSlashPos);
+            if (href.endsWith('/')) {
+              href = href.substr(0, href.length-1);
             }
-            pdfPath = pdfPath + '/';
-            pdfPath = pdfPath.replace('/docs/', '/pdfs/');
-            return pdfPath;
-          }
+            else {
+              href = href + '/';
+            }
+            if (href in pdfData) {
+              return pdfData[href];
+            }
+            return "";
+          };
 
           const getDownloadItems = function() {
             var activePageSidebarLink;
@@ -85,29 +79,27 @@ export default function (
             }
 
             var downloadItems = [];
+            var activePdfData = getPdfDataForHref(activePageSidebarLink.attr('href'));
             downloadItems.push({
               title: 'Download this chapter (' + activePageSidebarLink.text() +')',
-              slug: slugFunction(activePageSidebarLink.text()),
+              path: getBaseUrl() + activePdfData.file,
               type: 'page'
             });
 
             var parentMenuItem = activePageSidebarLink.parent().parent().parent();
             while (parentMenuItem && parentMenuItem.length > 0) {
               if (parentMenuItem.hasClass("menu__list-item")) {
-                var activePageSidebarLinkQuery = parentMenuItem.find(".menu__link");
-                if (activePageSidebarLinkQuery.length > 0) {
-                  activePageSidebarLink = activePageSidebarLinkQuery.first();
-                  slug = slugFunction(activePageSidebarLink.text());
-                  downloadItems.forEach(function(downloadItem) {
-                    downloadItem.slug = slug + '-' + downloadItem.slug;
-                  });
+                var parentSidebarLinkQuery = parentMenuItem.find(".menu__link");
+                if (parentSidebarLinkQuery.length > 0) {
+                  var parentSidebarLink = parentSidebarLinkQuery.first();
+                  var parentPdfData = getPdfDataForHref(parentSidebarLink.attr('href'));
                   downloadItems.push({
-                    title: 'Download section (' + activePageSidebarLink.text() +')',
-                    slug: slug,
+                    title: 'Download section (' + parentSidebarLink.text() +')',
+                    path: getBaseUrl() + parentPdfData.file,
                     type: 'section'
                   });
                 }
-                parentMenuItem = activePageSidebarLink.parent().parent().parent();
+                parentMenuItem = parentSidebarLink.parent().parent().parent();
               }
               else {
                 parentMenuItem = null;
@@ -116,23 +108,22 @@ export default function (
 
             downloadItems.push({
               title: 'Download complete documentation',
-              slug: slugFunction('${siteConfig.projectName}'),
+              path: getBaseUrl() + activePdfData.root,
               type: 'page'
             });
 
             return downloadItems;
-          }
+          };
 
           const fillDownloadDropdownMenu = function() {
             $('#pdfDownloadMenuList').empty();
 
             const downloadItems = getDownloadItems();
-            const pdfPath = getPdfPath();
 
             var printPopupContent = '';
             downloadItems.forEach(function(downloadItem) {
               printPopupContent += '<li>';
-              printPopupContent += '<a class="dropdown__link" href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
+              printPopupContent += '<a class="dropdown__link" href="' + downloadItem.path + '" download>' + downloadItem.title + '</a>';
               printPopupContent += '</li>';
             });
             if (printPopupContent.length === 0) {
@@ -140,29 +131,30 @@ export default function (
             }
 
             $("#pdfDownloadMenuList").append(printPopupContent);
-          }
+          };
 
           const fillDownloadSidebarMenu = function() {
             $('#pdfLinkSidebarMenu').empty();
 
             const downloadItems = getDownloadItems();
-            const pdfPath = getPdfPath();
 
             var printMenuContent = '';
             downloadItems.forEach(function(downloadItem) {
               printMenuContent += '<li class="menu__list-item">';
-              printMenuContent += '<a class="menu__link" href="' + pdfPath + downloadItem.slug + '.pdf" download>' + downloadItem.title + '</a>';
+              printMenuContent += '<a class="menu__link" href="' + downloadItem.path + '" download>' + downloadItem.title + '</a>';
               printMenuContent += '</li>';
             });
             if (printMenuContent.length === 0) {
               printMenuContent = '<li>No PDF downloads on this page</li>';
             }
             $('#pdfLinkSidebarMenu').append(printMenuContent);
-          }
+          };
 
           const checkAndInsertPdfButtons = function() {
-
-            if ( !$("#pdfLink").length ) {
+            if (!$("html").hasClass("plugin-docs")) {
+              return;
+            }
+            if (!$("#pdfLink").length) {
               var pdfDownloadButton = $('' +
               '<div class="navbar__item dropdown dropdown--hoverable dropdown--right" id="pdfDownloadMenu">' +
               '  <a class="navbar__item navbar__link pdfLink" id="pdfLink" href="#">${pluginOptions.downloadButtonText}</a>' +
@@ -181,41 +173,30 @@ export default function (
               });
               $('.navbar__toggle').click(fillDownloadSidebarMenu);
             }
-          }
-  
-          $(window).on('load', function () {
-            setInterval(checkAndInsertPdfButtons, 1000);
-          });
+          };
 
-        </script>
-        `
+          $(window).on('load', function () {
+            fetch(getBaseUrl() + 'pdfs.json')
+            .then((response) => response.json())
+            .then(function(json) {
+              pdfData = json;
+              checkAndInsertPdfButtons();
+              setInterval(checkAndInsertPdfButtons, 1000);
+            });
+          });
+        </script>`
         ],
       };
     },
 
-    extendCli(cli) {
-
-      cli
-        .command('papersaurus:build')
-        .description('Generate pdf files for website')
-        .action(() => {
-
-          const CWD = process.cwd();
-          const siteConfig = loadConfig(`${CWD}/docusaurus.config.js`);
-
-          (async () => {
-            generatePdfFiles(pluginOptions, siteConfig);
-          })();  
-
-        });
-
-    },
-
     async postBuild(props) {
-      if (pluginOptions.autoBuildPdfs) {
-        await generatePdfFiles(pluginOptions, props.siteConfig);
+      let forceBuild = process.env.BUILD_PDF || "";
+      if ((pluginOptions.autoBuildPdfs && !forceBuild.startsWith("0")) || forceBuild.startsWith("1")) {
+        await generatePdfFiles(_context.outDir, pluginOptions, props);
       }
     },
 
   };
 }
+
+export { validateOptions } from "./validateOptions";

@@ -5,28 +5,58 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export type PapersaurusPluginOptions = {
-    addDownloadButton: boolean,
-    autoBuildPdfs: boolean,
-    downloadButtonText: string,
-    ignoreDocs: string[],
-    stylesheets: string[],
-    scripts: string[],
-    coverPageHeader: string,
-    coverPageFooter: string,
-    getPdfCoverPage: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string, version: string) => string;
-    getPdfPageHeader: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string) => string;
-    getPdfPageFooter: (siteConfig: any, pluginConfig: PapersaurusPluginOptions, pageTitle: string) => string;
-    author: string,
-    footerParser: string,
-    keepDebugHtmls: boolean,
-    sidebarNames: string[],
-    subfolders: string[],
-    productTitles: string[],
-    rootDocIds: RootDocIds,
+export interface PluginOptions {
+  addDownloadButton?: boolean;
+  autoBuildPdfs?: boolean;
+  downloadButtonText?: string;
+  ignoreDocs?: string[];
+  stylesheets?: string[];
+  alwaysIncludeSiteStyles?: boolean;
+  scripts?: string[];
+  coverPageHeader?: string;
+  coverPageFooter?: string;
+  getPdfCoverPage?: PageFunction;
+  getPdfPageHeader?: PageFunction;
+  getPdfPageFooter?: PageFunction;
+  margins?: Margins;
+  coverMargins?: Margins;
+  author?: string;
+  footerParser?: RegExp;
+  keepDebugHtmls?: boolean;
+  sidebarNames?: string[];
+  versions?: string[];
+  subfolders?: string[];
+  productTitles?: string[];
+  useExtraPaths?: UsePath[];
+  ignoreCssSelectors?: string[];
+  jQueryUrl?: string;
+  getPdfFileName?: FileNameFunction;
 }
 
-export type RootDocIds = {version: string, rootDocId: string}[];
+export type PapersaurusPluginOptions = Required<PluginOptions>;
+
+export type PageFunction = (
+  siteConfig: any,
+  pluginConfig: PapersaurusPluginOptions,
+  pageTitle: string,
+  version: string
+) => string;
+
+export type FileNameFunction = (
+  siteConfig: any,
+  pluginConfig: PapersaurusPluginOptions,
+  pageTitle: string,
+  pageId: string,
+  parentTitles: string[],
+  parentIds: string[],
+  version: string,
+  versionPath: string
+) => string;
+
+export type UsePath = {
+  serverPath: string,
+  localPath: string
+};
 
 export type TocInfo = {
   link: string,
@@ -34,8 +64,9 @@ export type TocInfo = {
   text: string
 }
 
-export type VersionInfo = {
-  version: string,
-  urlAddIn: string,
-  sidebarFile: string
+export type Margins = {
+  top: string,
+  right: string,
+  bottom: string,
+  left: string
 }
