@@ -23,8 +23,10 @@ export interface PluginOptions {
   author?: string;
   footerParser?: RegExp;
   keepDebugHtmls?: boolean;
+  puppeteerTimeout?: number;
   sidebarNames?: string[];
   versions?: string[];
+  productVersion?: string;
   subfolders?: string[];
   productTitles?: string[];
   useExtraPaths?: UsePath[];

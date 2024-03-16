@@ -65,6 +65,12 @@ Set this parameter to `true` to keep the files.
 
 Default: `false`
 
+### puppeteerTimeout
+
+Large PDFs might cause a timeout error on puppeteer. Use this parameter to set the puppeteer timeout in ms.
+
+Default: `30000`
+
 ### sidebarNames
 
 The plugin is using your `sidebars.js` file to find the sections and documents. Since the file can contain multiple sidebars, add the name(s) of the sidebar(s) that should be used to generate files. If none is specified all will be used.
@@ -76,6 +82,12 @@ Default: `[]`
 Specify documentation versions to generate pdfs for. If none is specified pdfs will be generated for all versions.
 
 Default: `[]`
+
+### productVersion
+
+In case the documentation is not versioned, but an external (product) version should be added to the PDFs, inject it using this parameter.
+
+Default: `""`
 
 ### subfolders
 
