@@ -26,6 +26,7 @@ export interface PluginOptions {
   puppeteerTimeout?: number;
   sidebarNames?: string[];
   versions?: string[];
+  productVersion?: string;
   subfolders?: string[];
   productTitles?: string[];
   useExtraPaths?: UsePath[];

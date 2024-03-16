@@ -85,7 +85,8 @@ export async function generatePdfFiles(
   // Start a puppeteer browser
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security'] });
 
-  let linkToFile = new Map<string, any>();
+  const linkToFile: { [key: string]: { label: string, file: string, type: 'root' | 'section' | 'chapter' }[] } = {};
+
   // Loop through all found versions
   for (const versionInfo of (docPlugin.content as LoadedContent).loadedVersions) {
     if (pluginOptions.versions.length != 0 && !pluginOptions.versions.includes(versionInfo.versionName)) {
@@ -124,20 +125,6 @@ export async function generatePdfFiles(
       const versionBuildDir = join(pdfBuildDir, versionPath, folderName);
       fs.ensureDirSync(versionBuildDir);
 
-      // Build URL to root document of that version
-      let rootDocUrl = `${siteAddress}docs/`;
-      if (folderName) {
-        rootDocUrl = `${siteAddress}docs/${folderName}/`;
-      }
-
-      if (versionPath) {
-        rootDocUrl = `${rootDocUrl}${versionPath}/`;
-      }
-
-      if (versionPath && folderName) {
-        rootDocUrl = `${rootDocUrl}${versionPath}/${folderName}`;
-      }
-
       console.log(`${pluginLogPrefix}Start processing sidebar named '${sidebarName}' in version '${versionInfo.label}'`);
 
       let sidebar = versionInfo.sidebars[sidebarName];
@@ -158,15 +145,36 @@ export async function generatePdfFiles(
         };
 
         // Browse through all documents of this sidebar
-        pickHtmlArticlesRecursive(rootCategory, [], versionInfo, rootDocUrl, docusaurusBuildDir, siteConfig);
+        pickHtmlArticlesRecursive(rootCategory, [], versionInfo, `${siteAddress}docs/`, docusaurusBuildDir, siteConfig);
+
+        let productVersion = "";
+
+        if ((docPlugin.content as LoadedContent).loadedVersions.length === 1){
+          productVersion = pluginOptions.productVersion;
+        }
 
         // Create all PDF files for this sidebar
-        await createPdfFilesRecursive(rootCategory, [], [], versionInfo, pluginOptions, siteConfig, versionBuildDir, versionPdfPath, browser, siteAddress, productTitle);
+        await createPdfFilesRecursive(
+          rootCategory, 
+          [], 
+          [], 
+          versionInfo, 
+          pluginOptions, 
+          siteConfig, 
+          versionBuildDir, 
+          versionPdfPath, 
+          browser, 
+          siteAddress, 
+          productTitle,
+          productVersion
+        );
 
         // Save url to filename mappings
-        for (const categorySubItem of rootCategory.items) {
-          saveUrlToFileMappingsRecursive(categorySubItem, rootCategory.pdfFilename, linkToFile);
-        }
+        saveUrlToFileMappingsRecursive(rootCategory.items, linkToFile, [{
+          label: rootCategory.label,
+          file: rootCategory.pdfFilename,
+          type: 'root'
+        }])
       }
       else {
         console.log(`${pluginLogPrefix}Sidebar '${sidebarName}' doesn't exist in version '${versionInfo.label}', continue without it...`);
@@ -176,7 +184,7 @@ export async function generatePdfFiles(
 
   }
 
-  fs.writeFileSync(join(docusaurusBuildDir, 'pdfs.json'), JSON.stringify(Object.fromEntries(linkToFile)));
+  fs.writeFileSync(join(docusaurusBuildDir, 'pdfs.json'), JSON.stringify(linkToFile));
 
   browser.close();
   httpServer.close();
@@ -184,17 +192,29 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}generatePdfFiles finished!`);
 }
 
-function saveUrlToFileMappingsRecursive(sideBarItem: any, root: string, output: Map<string, any>): any {
-  if (sideBarItem.permalink) {
-    output.set(sideBarItem.permalink, { root: root, file: sideBarItem.pdfFilename });
-  }
+function saveUrlToFileMappingsRecursive(
+  sideBarItems: any[],
+  output: { [key: string]: { label: string, file: string, type: 'root' | 'section' | 'chapter' }[] },
+  parents: { label: string, file: string, type: 'root' | 'section' | 'chapter' }[] = []) {
 
-  if (sideBarItem.items) {
-    for (const categorySubItem of sideBarItem.items) {
-      saveUrlToFileMappingsRecursive(categorySubItem, root, output);
+  for (const item of sideBarItems) {
+    if (item.permalink) {
+      output[item.permalink] = [...parents, {
+        label: item.label,
+        file: item.pdfFilename,
+        type: 'chapter'
+      }];
+    }
+
+    if (item.items) {
+      saveUrlToFileMappingsRecursive(item.items, output, [...parents, {
+        label: item.label,
+        file: item.pdfFilename,
+        type: 'section'
+      }]);
     }
   }
-}
+};
 
 function pickHtmlArticlesRecursive(sideBarItem: any,
   parentTitles: string[],
@@ -262,7 +282,9 @@ async function createPdfFilesRecursive(sideBarItem: any,
   pdfPath: string,
   browser: puppeteer.Browser,
   siteAddress: string,
-  productTitle: string): Promise<any[]> {
+  productTitle: string,
+  productVersion: string
+): Promise<any[]> {
 
   let articles: any[] = [];
   switch (sideBarItem.type) {
@@ -285,7 +307,9 @@ async function createPdfFilesRecursive(sideBarItem: any,
           pdfPath,
           browser,
           siteAddress,
-          productTitle);
+          productTitle,
+          productVersion
+        );
         articles.push(...subDocs);
       }
       break;
@@ -313,7 +337,7 @@ async function createPdfFilesRecursive(sideBarItem: any,
 
   if (articles.length > 0) {
     await createPdfFromArticles(documentTitle,
-      version.label,
+      productVersion || version.label,
       pdfFilename,
       articles,
       pluginOptions,

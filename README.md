@@ -83,6 +83,12 @@ Specify documentation versions to generate pdfs for. If none is specified pdfs w
 
 Default: `[]`
 
+### productVersion
+
+In case the documentation is not versioned, but an external (product) version should be added to the PDFs, inject it using this parameter.
+
+Default: `""`
+
 ### subfolders
 
 If you are using multiple sidebars your files are located in different subfolders. Enter the names of the subfolders located in your docs folder. In case your main sidebar is directly in the docs directory enter an empty string and the names of the other folders.
