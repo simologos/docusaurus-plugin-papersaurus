@@ -192,6 +192,11 @@ export async function generatePdfFiles(
   console.log(`${pluginLogPrefix}generatePdfFiles finished!`);
 }
 
+function stripTrailingSlash (str: string) {
+  return str.endsWith('/') ?
+    str.slice(0, -1) : str;
+};
+
 function saveUrlToFileMappingsRecursive(
   sideBarItems: any[],
   output: { [key: string]: { label: string, file: string, type: 'root' | 'section' | 'chapter' }[] },
@@ -199,7 +204,7 @@ function saveUrlToFileMappingsRecursive(
 
   for (const item of sideBarItems) {
     if (item.permalink) {
-      output[item.permalink] = [...parents, {
+      output[stripTrailingSlash(item.permalink)] = [...parents, {
         label: item.label,
         file: item.pdfFilename,
         type: 'chapter'
