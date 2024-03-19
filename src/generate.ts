@@ -493,6 +493,7 @@ async function createPdfFromArticles(
   $(".theme-doc-breadcrumbs").remove();
   $(".theme-doc-version-badge").remove();
   $(".theme-doc-toc-mobile").remove();
+  $(".buttonGroup__atx").remove();
 
   fullHtml = $.html();
 
