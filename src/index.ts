@@ -5,20 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {LoadContext, Plugin, DocusaurusConfig} from '@docusaurus/types';
+import {LoadContext, Plugin} from '@docusaurus/types';
 import {generatePdfFiles} from './generate';
 import {PluginOptions, PapersaurusPluginOptions} from './types';
 import {processOptions} from './validateOptions';
-import importFresh from 'import-fresh';
-import * as fs from "fs";
 
-function loadConfig(configPath: string): DocusaurusConfig {
-  if (!fs.existsSync(configPath)) {
-    throw new Error(`Config file "${configPath}" not found`);
-  }
-  const loadedConfig = importFresh(configPath) as DocusaurusConfig;
-  return loadedConfig
-}
 
 export default function (
   _context: LoadContext,
@@ -37,8 +28,7 @@ export default function (
         return {};
       }
 
-      const CWD = process.cwd();
-      const siteConfig = loadConfig(`${CWD}/docusaurus.config.js`);
+      const siteConfig = _context.siteConfig
 
       return {
         headTags: [`
