@@ -26,6 +26,7 @@ export default function (
 ): Plugin<void> {
 
   let pluginOptions:PapersaurusPluginOptions = processOptions(options);
+  const buildId = Math.trunc(Date.now() / 1000).toString();
 
   return {
 
@@ -150,7 +151,7 @@ export default function (
           };
           
           $(window).on('load', function () {
-            fetch(getBaseUrl() + 'pdfs.json')
+            fetch(getBaseUrl() + 'pdfs' + ${buildId} + '.json')
               .then((response) => response.json())
               .then(function (json) {
                 pdfData = json;
@@ -166,7 +167,7 @@ export default function (
     async postBuild(props) {
       let forceBuild = process.env.BUILD_PDF || "";
       if ((pluginOptions.autoBuildPdfs && !forceBuild.startsWith("0")) || forceBuild.startsWith("1")) {
-        await generatePdfFiles(_context.outDir, pluginOptions, props);
+        await generatePdfFiles(_context.outDir, pluginOptions, props, buildId);
       }
     },
 

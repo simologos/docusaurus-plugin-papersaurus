@@ -29,7 +29,8 @@ const pluginLogPrefix = '[papersaurus] ';
 export async function generatePdfFiles(
   outDir: string,
   pluginOptions: PapersaurusPluginOptions,
-  { siteConfig, plugins }: Props) {
+  { siteConfig, plugins }: Props,
+  buildId: string) {
 
   console.log(`${pluginLogPrefix}Execute generatePdfFiles...`);
 
@@ -184,7 +185,8 @@ export async function generatePdfFiles(
 
   }
 
-  fs.writeFileSync(join(docusaurusBuildDir, 'pdfs.json'), JSON.stringify(linkToFile));
+  let pdfsJsonPath = join(docusaurusBuildDir, 'pdfs' + buildId + '.json');
+  fs.writeFileSync(pdfsJsonPath, JSON.stringify(linkToFile));
 
   browser.close();
   httpServer.close();
